@@ -8,11 +8,13 @@ class PiStrategy {
 public:
     virtual ~PiStrategy() = default;
     virtual double calculatePi(uint32_t steps) = 0;
+    virtual std::string toString() = 0;
 };
 
 class SerialPiStrategy: public PiStrategy {
 public:
     double calculatePi(uint32_t steps) override;
+    std::string toString() override;
 };
 
 class PiBenchMarker {
