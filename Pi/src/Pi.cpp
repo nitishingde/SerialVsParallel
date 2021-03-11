@@ -77,6 +77,30 @@ std::string CacheFriendlyOpenMP_PiStrategy::toString() {
     return "Calculate Pi using OpenMP, using cache friendly options";
 }
 
+double AtomicBarrierOpenMP_PiStrategy::calculatePi(uint32_t steps) {
+    const double delta = 1.0 / steps;
+    double area = 0.0;
+
+    omp_set_num_threads(omp_get_max_threads());
+    #pragma omp parallel firstprivate(steps, delta) shared(area) default(none)
+    {
+        auto totalThreads = omp_get_num_threads();
+        double area_t = 0.0;
+        for(uint32_t step = omp_get_thread_num(); step < steps; step+=totalThreads) {
+            double x = (step + 0.5) * delta;
+            area_t += 4.0 / (1.0 + x*x);
+        }
+    #pragma omp atomic
+        area += area_t;
+    }
+
+    return area * delta;
+}
+
+std::string AtomicBarrierOpenMP_PiStrategy::toString() {
+    return "Calculate Pi using OpenMP, using atomic barrier";
+}
+
 PiBenchMarker::PiBenchMarker(std::unique_ptr<PiStrategy> pPiStrategy)
     : mpPiStrategy(std::move(pPiStrategy))
 {}
