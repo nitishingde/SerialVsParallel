@@ -101,6 +101,24 @@ std::string AtomicBarrierOpenMP_PiStrategy::toString() {
     return "Calculate Pi using OpenMP, using atomic barrier";
 }
 
+double ReductionOpenMP_PiStrategy::calculatePi(uint32_t steps) {
+    const double delta = 1.0 / steps;
+    double area = 0.0;
+
+    omp_set_num_threads(omp_get_max_threads());
+    #pragma omp parallel for reduction(+:area) firstprivate(steps, delta) default(none)
+    for(uint32_t step = 0; step < steps; ++step) {
+        double x = (step + 0.5) * delta;
+        area += 4.0 / (1.0 + x*x);
+    }
+
+    return area * delta;
+}
+
+std::string ReductionOpenMP_PiStrategy::toString() {
+    return "Calculate Pi using OpenMP, using reduction technique";
+}
+
 PiBenchMarker::PiBenchMarker(std::unique_ptr<PiStrategy> pPiStrategy)
     : mpPiStrategy(std::move(pPiStrategy))
 {}
