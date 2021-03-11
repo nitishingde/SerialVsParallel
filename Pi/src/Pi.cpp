@@ -3,6 +3,7 @@
 #include <chrono>
 #include <cstdio>
 #include <numeric>
+#include <omp.h>
 #include <vector>
 
 double SerialPiStrategy::calculatePi(uint32_t steps) {
@@ -19,6 +20,28 @@ double SerialPiStrategy::calculatePi(uint32_t steps) {
 
 std::string SerialPiStrategy::toString() {
     return "Calculate Pi using serial code";
+}
+
+double OpenMP_PiStrategy::calculatePi(uint32_t steps) {
+    const double delta = 1.0 / steps;
+    std::vector<double> area(omp_get_max_threads()*2, 0.0);
+
+    omp_set_num_threads(omp_get_max_threads());
+    #pragma omp parallel firstprivate(steps, delta) shared(area) default(none)
+    {
+        auto totalThreads = omp_get_num_threads();
+        auto threadID = omp_get_thread_num();
+        for(uint32_t step = threadID; step < steps; step+=totalThreads) {
+            double x = (step + 0.5) * delta;
+            area[threadID] += 4.0 / (1.0 + x*x);
+        }
+    }
+
+    return std::accumulate(area.begin(), area.end(), 0.0) * delta;
+}
+
+std::string OpenMP_PiStrategy::toString() {
+    return "Calculate Pi using OpenMP, simplified";
 }
 
 PiBenchMarker::PiBenchMarker(std::unique_ptr<PiStrategy> pPiStrategy)
