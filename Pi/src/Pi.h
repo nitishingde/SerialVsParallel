@@ -23,6 +23,12 @@ public:
     std::string toString() override;
 };
 
+class CacheFriendlyOpenMP_PiStrategy: public PiStrategy {
+public:
+    double calculatePi(uint32_t steps) override;
+    std::string toString() override;
+};
+
 class PiBenchMarker {
 private:
     std::unique_ptr<PiStrategy> mpPiStrategy = nullptr;

@@ -6,6 +6,8 @@
 #include <omp.h>
 #include <vector>
 
+#define CACHE_PADDING 8
+
 double SerialPiStrategy::calculatePi(uint32_t steps) {
     const double delta = 1.0 / steps;
     double area = 0.0;
@@ -42,6 +44,37 @@ double OpenMP_PiStrategy::calculatePi(uint32_t steps) {
 
 std::string OpenMP_PiStrategy::toString() {
     return "Calculate Pi using OpenMP, simplified";
+}
+
+double CacheFriendlyOpenMP_PiStrategy::calculatePi(uint32_t steps) {
+    const double delta = 1.0 / steps;
+    uint32_t maxThreadsPossible = omp_get_max_threads();
+    double area[maxThreadsPossible][CACHE_PADDING];
+    for(uint32_t i = 0; i < maxThreadsPossible; ++i) {
+        area[i][0] = 0;
+    }
+
+    omp_set_num_threads(omp_get_max_threads());
+    #pragma omp parallel firstprivate(steps, delta) shared(area) default(none)
+    {
+        auto totalThreads = omp_get_num_threads();
+        auto threadID = omp_get_thread_num();
+        for(uint32_t step = threadID; step < steps; step+=totalThreads) {
+            double x = (step + 0.5) * delta;
+            area[threadID][0] += 4.0 / (1.0 + x*x);
+        }
+    }
+
+    double totalArea = 0.0;
+    for(uint32_t i = 0; i < maxThreadsPossible; ++i) {
+        totalArea += area[i][0];
+    }
+
+    return totalArea * delta;
+}
+
+std::string CacheFriendlyOpenMP_PiStrategy::toString() {
+    return "Calculate Pi using OpenMP, using cache friendly options";
 }
 
 PiBenchMarker::PiBenchMarker(std::unique_ptr<PiStrategy> pPiStrategy)
