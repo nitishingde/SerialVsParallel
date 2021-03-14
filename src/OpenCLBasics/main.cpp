@@ -22,7 +22,7 @@ void hello_world() {
 
     cl::Kernel kernel(program, "helloWorld", &status);
     verifyOpenCL_Status(status);
-    kernel.setArg(0, memBuf);
+    verifyOpenCL_Status(kernel.setArg(0, memBuf));
 
     cl::CommandQueue queue(context, device, 0 &status);
     verifyOpenCL_Status(status);
