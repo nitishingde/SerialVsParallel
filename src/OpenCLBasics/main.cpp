@@ -33,7 +33,6 @@ void hello_world() {
     std::vector<cl::Event> blockers(1);
     verifyOpenCL_Status(queue.enqueueTask(kernel, nullptr, &blockers.front()));
     verifyOpenCL_Status(queue.enqueueReadBuffer(memBuf, CL_TRUE, 0, sizeof(buf), buf, &blockers));
-    verifyOpenCL_Status(queue.finish());
 
     printf("%s\n\n", buf);
 }
@@ -79,7 +78,6 @@ void visualise_execution_model() {
             &blockers.front()
         ));
         verifyOpenCL_Status(commandQueue.enqueueReadBuffer(matrixMem, CL_TRUE, 0, sizeof(matrix), matrix, &blockers));
-        verifyOpenCL_Status(commandQueue.finish());
         printf("%s\n", message);
         for(size_t i = 0; i < dim_x; ++i) {
             for(size_t j=0; j < dim_y; ++j) {
