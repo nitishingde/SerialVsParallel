@@ -8,16 +8,7 @@ find_package(OpenMP REQUIRED)
 
 add_executable(Pi
         src/Pi/main.cpp
-)
-
-target_sources(Pi
-    PRIVATE
-        src/Pi/Pi.cpp
-)
-
-target_include_directories(Pi
-    PRIVATE
-        src/Pi/Pi.h
+        src/Pi/Pi.cpp src/Pi/Pi.h
 )
 
 target_link_libraries(Pi
