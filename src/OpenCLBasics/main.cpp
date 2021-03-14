@@ -1,5 +1,4 @@
 #define CL_USE_DEPRECATED_OPENCL_2_0_APIS
-#include <iostream>
 #include "../Utility.h"
 
 void hello_world() {
@@ -37,7 +36,7 @@ void hello_world() {
     verifyOpenCL_Status(queue.enqueueReadBuffer(memBuf, CL_TRUE, 0, sizeof(buf), buf, &blockers));
     verifyOpenCL_Status(queue.finish());
 
-    std::cout << buf << "\n\n";
+    printf("%s\n\n", buf);
 }
 
 int main() {
