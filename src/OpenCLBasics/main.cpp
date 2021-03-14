@@ -9,8 +9,6 @@ void hello_world() {
 
     auto devices = context.getInfo<CL_CONTEXT_DEVICES>(&status);
     verifyOpenCL_Status(status);
-    if(devices.empty())
-        throw OpenCL_Exception(CL_DEVICE_NOT_FOUND);
     auto device = devices.front();
 
     cl::Program program(context, readScript("HelloWorld.cl"), false, &status);
