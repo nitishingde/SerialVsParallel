@@ -39,6 +39,14 @@ void hello_world() {
 
 void visualise_execution_model() {
     cl_int status;
+    auto printMatrix = [](float *matrix, size_t dim_x, size_t dim_y) {
+        for(size_t i = 0; i < dim_x; ++i) {
+            for(size_t j=0; j < dim_y; ++j) {
+                printf(" %02.0f ", matrix[i*dim_y+j]);
+            }
+            printf("\n");
+        }
+    };
 
     cl::Context context(CL_DEVICE_TYPE_GPU, nullptr, nullptr, nullptr, &status);
     verifyOpenCL_Status(status);
@@ -79,14 +87,22 @@ void visualise_execution_model() {
         ));
         verifyOpenCL_Status(commandQueue.enqueueReadBuffer(matrixMem, CL_TRUE, 0, sizeof(matrix), matrix, &blockers));
         printf("%s\n", message);
-        for(size_t i = 0; i < dim_x; ++i) {
-            for(size_t j=0; j < dim_y; ++j) {
-                printf(" %02.0f ", matrix[i][j]);
-            }
-            printf("\n");
-        }
+        printMatrix((float *)matrix, dim_x, dim_y);
         printf("\n");
     }
+
+    // Though the matrix is q 2d array, we don't necessarily have to create a 2d NDRange kernel to handle it
+    cl::Kernel kernel(program, "visualiseWorkItemsInGlobalSpace", &status);
+    verifyOpenCL_Status(status);
+    verifyOpenCL_Status(kernel.setArg(0, matrixMem));
+
+    std::vector<cl::Event> blockers(1);
+    verifyOpenCL_Status(commandQueue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(dim_x*dim_y), cl::NDRange(1), nullptr, &blockers.front()));
+    verifyOpenCL_Status(commandQueue.enqueueReadBuffer(matrixMem, CL_TRUE, 0, sizeof(matrix), matrix, &blockers));
+
+    printf("Handling 2d matrix as 1D NDRange\n");
+    printMatrix((float *)matrix, dim_x, dim_y);
+    printf("\n");
 }
 
 int main() {
