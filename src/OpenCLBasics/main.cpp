@@ -55,8 +55,9 @@ void visualise_execution_model() {
     verifyOpenCL_Status(status);
     auto device = devices.front();
 
-    size_t dim_x = 16, dim_y = 4;
-    float matrix[dim_x][dim_y];
+    size_t globalDimX = 9, globalDimY = 8;
+    size_t localDimX = 3, localDimY = 2;
+    float matrix[globalDimX][globalDimY];
     memset(matrix, 0, sizeof(matrix));
     cl::Buffer matrixMem(context, CL_MEM_HOST_READ_ONLY|CL_MEM_WRITE_ONLY, sizeof(matrix), nullptr, &status);
     verifyOpenCL_Status(status);
@@ -69,9 +70,9 @@ void visualise_execution_model() {
     verifyOpenCL_Status(status);
 
     for(auto [kernelName, message]: {
-        std::make_tuple("visualiseWorkItemsInGlobalSpace", "Visualise work-items in global space:"),
-        std::make_tuple("visualiseWorkItemsInWorkGroupSpace", "Visualise work-items in work-group space:"),
-        std::make_tuple("visualiseWorkGroups", "Visualise work groups:"),
+        std::make_tuple("visualiseWorkItemsInGlobalSpace", "Visualise work-items in global space of a 2-dim NDRange"),
+        std::make_tuple("visualiseWorkItemsInWorkGroupSpace", "Visualise work-items in work-group space of a 2-dim NDRange"),
+        std::make_tuple("visualiseWorkGroups", "Visualise work groups of a 2-dim NDRange"),
     }) {
         cl::Kernel kernel(program, kernelName, &status);
         verifyOpenCL_Status(status);
@@ -80,29 +81,44 @@ void visualise_execution_model() {
         verifyOpenCL_Status(commandQueue.enqueueNDRangeKernel(
             kernel,
             cl::NullRange,
-            cl::NDRange(dim_x, dim_y/*, 1*/),
-            cl::NDRange(2, 2/*, 1*/),
+            cl::NDRange(globalDimX, globalDimY/*, 1*/),
+            cl::NDRange(localDimX, localDimY/*, 1*/),
             nullptr,
             &blockers.front()
         ));
         verifyOpenCL_Status(commandQueue.enqueueReadBuffer(matrixMem, CL_TRUE, 0, sizeof(matrix), matrix, &blockers));
         printf("%s\n", message);
-        printMatrix((float *)matrix, dim_x, dim_y);
+        printf("Global dimensions: (%zu, %zu, 1)\n", globalDimX, globalDimY);
+        printf("Local dimensions : (%zu, %zu, 1)\n", localDimX, localDimY);
+        printMatrix((float *)matrix, globalDimX, globalDimY);
         printf("\n");
     }
 
     // Though the matrix is q 2d array, we don't necessarily have to create a 2d NDRange kernel to handle it
-    cl::Kernel kernel(program, "visualiseWorkItemsInGlobalSpace", &status);
-    verifyOpenCL_Status(status);
-    verifyOpenCL_Status(kernel.setArg(0, matrixMem));
-
-    std::vector<cl::Event> blockers(1);
-    verifyOpenCL_Status(commandQueue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(dim_x*dim_y), cl::NDRange(1), nullptr, &blockers.front()));
-    verifyOpenCL_Status(commandQueue.enqueueReadBuffer(matrixMem, CL_TRUE, 0, sizeof(matrix), matrix, &blockers));
-
-    printf("Handling 2d matrix as 1D NDRange\n");
-    printMatrix((float *)matrix, dim_x, dim_y);
-    printf("\n");
+    for(auto [kernelName, message]: {
+        std::make_tuple("visualiseWorkItemsInGlobalSpace", "Visualise work-items in global space of a 1-dim NDRange"),
+        std::make_tuple("visualiseWorkItemsInWorkGroupSpace", "Visualise work-items in work-group space of a 1-dim NDRange"),
+        std::make_tuple("visualiseWorkGroups", "Visualise work groups of a 1-dim NDRange"),
+    }) {
+        cl::Kernel kernel(program, kernelName, &status);
+        verifyOpenCL_Status(status);
+        verifyOpenCL_Status(kernel.setArg(0, matrixMem));
+        std::vector<cl::Event> blockers(1);
+        verifyOpenCL_Status(commandQueue.enqueueNDRangeKernel(
+            kernel,
+            cl::NullRange,
+            cl::NDRange(globalDimX * globalDimY),
+            cl::NDRange(localDimX * localDimX),
+            nullptr,
+            &blockers.front()
+        ));
+        verifyOpenCL_Status(commandQueue.enqueueReadBuffer(matrixMem, CL_TRUE, 0, sizeof(matrix), matrix, &blockers));
+        printf("%s\n", message);
+        printf("Global dimensions: (%zu, 1, 1)\n", globalDimX * globalDimY);
+        printf("Local dimensions : (%zu, 1, 1)\n", localDimX * localDimY);
+        printMatrix((float *)matrix, globalDimX, globalDimY);
+        printf("\n");
+    }
 }
 
 int main() {
