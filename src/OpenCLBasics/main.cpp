@@ -119,6 +119,20 @@ void visualise_execution_model() {
         printMatrix((float *)matrix, globalDimX, globalDimY);
         printf("\n");
     }
+
+    for(auto [kernelName, message]: {
+        std::make_tuple("visualiseSequenceOfWorkItemsInGlobalSpace", "Visualise sequence of work-items in global space of a 2-dim NDRange"),
+        std::make_tuple("visualiseSequenceOfWorkGroups", "Visualise sequence of work-groups of a 2-dim NDRange"),
+        std::make_tuple("visualiseSequenceOfWorkItemsInWorkGroupSpace", "Visualise sequence of work-items in work-group space of a 2-dim NDRange"),
+    }) {
+        cl::Kernel kernel(program, kernelName, &status);
+        verifyOpenCL_Status(status);
+        printf("%s\n", message);
+        printf("[");
+        commandQueue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(globalDimX, globalDimY), cl::NDRange(localDimX, localDimY));
+        commandQueue.finish();
+        printf("\b\b]\n\n");
+    }
 }
 
 int main() {
