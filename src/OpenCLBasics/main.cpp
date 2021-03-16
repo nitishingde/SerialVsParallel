@@ -71,8 +71,8 @@ void visualise_execution_model() {
 
     for(auto [kernelName, message]: {
         std::make_tuple("visualiseWorkItemsInGlobalSpace", "Visualise work-items in global space of a 2-dim NDRange"),
+        std::make_tuple("visualiseWorkGroups", "Visualise work-groups of a 2-dim NDRange"),
         std::make_tuple("visualiseWorkItemsInWorkGroupSpace", "Visualise work-items in work-group space of a 2-dim NDRange"),
-        std::make_tuple("visualiseWorkGroups", "Visualise work groups of a 2-dim NDRange"),
     }) {
         cl::Kernel kernel(program, kernelName, &status);
         verifyOpenCL_Status(status);
@@ -97,8 +97,8 @@ void visualise_execution_model() {
     // Though the matrix is q 2d array, we don't necessarily have to create a 2d NDRange kernel to handle it
     for(auto [kernelName, message]: {
         std::make_tuple("visualiseWorkItemsInGlobalSpace", "Visualise work-items in global space of a 1-dim NDRange"),
+        std::make_tuple("visualiseWorkGroups", "Visualise work-groups of a 1-dim NDRange"),
         std::make_tuple("visualiseWorkItemsInWorkGroupSpace", "Visualise work-items in work-group space of a 1-dim NDRange"),
-        std::make_tuple("visualiseWorkGroups", "Visualise work groups of a 1-dim NDRange"),
     }) {
         cl::Kernel kernel(program, kernelName, &status);
         verifyOpenCL_Status(status);
