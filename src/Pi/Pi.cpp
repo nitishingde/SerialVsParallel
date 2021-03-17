@@ -136,16 +136,18 @@ void PiBenchMarker::benchmarkCalculatePi(uint32_t iterations, uint32_t steps) co
         fflush(stdout);
 
         auto start = std::chrono::high_resolution_clock::now();
-        pi = mpPiStrategy->calculatePi(steps);
+        pi += mpPiStrategy->calculatePi(steps);
         auto end = std::chrono::high_resolution_clock::now();
         executionTime[iteration] = std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count()/1.e9;
     }
+    pi /= iterations;
 
     printf("\r");
     printf("> Strategy        : %s\n", mpPiStrategy->toString().c_str());
     printf("> Iterations      : %u\n", iterations);
     printf("> Steps           : %u\n", steps);
     printf("Pi                : %0.17g\n", pi);
+    printf("Error margin      : %0.17g\n", std::abs(pi-3.14159265358979323));
     printf("Avg Execution Time: %.9gs\n", std::accumulate(executionTime.begin(), executionTime.end(), 0.0)/executionTime.size());
     printf("Min Execution Time: %.9gs\n", *std::min_element(executionTime.begin(), executionTime.end()));
     printf("Max Execution Time: %.9gs\n", *std::max_element(executionTime.begin(), executionTime.end()));
