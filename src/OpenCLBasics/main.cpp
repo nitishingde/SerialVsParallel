@@ -30,7 +30,7 @@ void hello_world() {
 
     // try commenting the writeBuffer line below, observe how it behaves
     verifyOpenCL_Status(queue.enqueueWriteBuffer(memBuf, CL_TRUE, 0, sizeof(buf), buf));
-    std::vector<cl::Event> blockers(1);
+    VECTOR_CLASS<cl::Event> blockers(1);
     verifyOpenCL_Status(queue.enqueueTask(kernel, nullptr, &blockers.front()));
     verifyOpenCL_Status(queue.enqueueReadBuffer(memBuf, CL_TRUE, 0, sizeof(buf), buf, &blockers));
 
@@ -77,7 +77,7 @@ void visualise_execution_model() {
         cl::Kernel kernel(program, kernelName, &status);
         verifyOpenCL_Status(status);
         verifyOpenCL_Status(kernel.setArg(0, matrixMem));
-        std::vector<cl::Event> blockers(1);
+        VECTOR_CLASS<cl::Event> blockers(1);
         verifyOpenCL_Status(commandQueue.enqueueNDRangeKernel(
             kernel,
             cl::NullRange,
@@ -103,7 +103,7 @@ void visualise_execution_model() {
         cl::Kernel kernel(program, kernelName, &status);
         verifyOpenCL_Status(status);
         verifyOpenCL_Status(kernel.setArg(0, matrixMem));
-        std::vector<cl::Event> blockers(1);
+        VECTOR_CLASS<cl::Event> blockers(1);
         verifyOpenCL_Status(commandQueue.enqueueNDRangeKernel(
             kernel,
             cl::NullRange,
