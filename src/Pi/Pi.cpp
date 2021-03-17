@@ -2,9 +2,12 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdio>
+#include <cmath>
 #include <numeric>
 #include <omp.h>
+#include <regex>
 #include <vector>
+#include "../Utility.h"
 
 #define CACHE_PADDING 8
 
@@ -117,6 +120,91 @@ double ReductionOpenMP_PiStrategy::calculatePi(uint32_t steps) {
 
 std::string ReductionOpenMP_PiStrategy::toString() {
     return "Calculate Pi using OpenMP, using reduction technique";
+}
+
+void OpenCL_PiStrategy::init() {
+    if(isInitialised) return;
+
+    cl_int status = CL_SUCCESS;
+
+    mContext = cl::Context(CL_DEVICE_TYPE_GPU, nullptr, nullptr, nullptr, &status);
+    verifyOpenCL_Status(status);
+
+    auto devices = mContext.getInfo<CL_CONTEXT_DEVICES>(&status);
+    verifyOpenCL_Status(status);
+    mDevice = devices.front();
+
+    // 512 on my machine
+    mWorkGroupSize = mDevice.getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>(&status);
+    verifyOpenCL_Status(status);
+#if not NDEBUG
+    printf("[DEBUG] Work Group size: %zu\n", mWorkGroupSize);
+#endif
+
+    cl::Program program(
+        mContext,
+        std::regex_replace(readScript("Pi.cl"), std::regex("%workGroupSize%"), std::to_string(mWorkGroupSize)),
+        false,
+        &status
+    );
+    verifyOpenCL_Status(status);
+    verifyOpenCL_Status(program.build("-cl-std=CL1.2"));
+    mKernel = cl::Kernel(program, "calculatePi", &status);
+    verifyOpenCL_Status(status);
+
+    mCommandQueue = cl::CommandQueue(mContext, mDevice, 0, &status);
+    verifyOpenCL_Status(status);
+
+    isInitialised = true;
+}
+
+OpenCL_PiStrategy::OpenCL_PiStrategy() {
+    init();
+}
+
+double OpenCL_PiStrategy::calculatePi(uint32_t steps) {
+    cl_int status = CL_SUCCESS;
+    const double delta = 1.0 / steps;
+
+    size_t N = ceil((double)steps/(double)mWorkGroupSize);
+
+    std::vector<float> workGroupArea(N, 0.f);
+    cl::Buffer workGroupAreaBuffer(
+        mContext,
+        CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+        workGroupArea.size() * sizeof(decltype(workGroupArea)::value_type),
+        workGroupArea.data(),
+        &status
+    );
+    verifyOpenCL_Status(status);
+
+    verifyOpenCL_Status(mKernel.setArg(0, workGroupAreaBuffer));
+    verifyOpenCL_Status(mKernel.setArg(1, (uint32_t)N));
+    verifyOpenCL_Status(mKernel.setArg(2, (uint32_t)steps));
+
+    VECTOR_CLASS<cl::Event> blockers(1);
+    verifyOpenCL_Status(mCommandQueue.enqueueNDRangeKernel(
+        mKernel,
+        cl::NullRange,
+        cl::NDRange(N*mWorkGroupSize),
+        cl::NDRange(mWorkGroupSize),
+        nullptr,
+        &blockers.front()
+    ));
+    verifyOpenCL_Status(mCommandQueue.enqueueReadBuffer(
+        workGroupAreaBuffer,
+        CL_TRUE,
+        0,
+        workGroupArea.size() * sizeof(decltype(workGroupArea)::value_type),
+        workGroupArea.data(),
+        &blockers
+    ));
+
+    return std::accumulate(workGroupArea.begin(), workGroupArea.end(), 0.0) * delta;
+}
+
+std::string OpenCL_PiStrategy::toString() {
+    return "Calculate Pi using OpenCL";
 }
 
 PiBenchMarker::PiBenchMarker(std::unique_ptr<PiStrategy> pPiStrategy)

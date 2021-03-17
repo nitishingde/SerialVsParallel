@@ -3,6 +3,7 @@
 
 
 #include <memory>
+#include <CL/cl.hpp>
 
 class PiStrategy {
 public:
@@ -37,6 +38,23 @@ public:
 
 class ReductionOpenMP_PiStrategy: public PiStrategy {
 public:
+    double calculatePi(uint32_t steps) override;
+    std::string toString() override;
+};
+
+class OpenCL_PiStrategy: public PiStrategy {
+private:
+    bool isInitialised = false;
+    size_t mWorkGroupSize {};
+    cl::Context mContext;
+    cl::Device mDevice;
+    cl::Kernel mKernel;
+    cl::CommandQueue mCommandQueue;
+
+private:
+    void init();
+public:
+    explicit OpenCL_PiStrategy();
     double calculatePi(uint32_t steps) override;
     std::string toString() override;
 };

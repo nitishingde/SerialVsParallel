@@ -10,11 +10,13 @@ find_package(OpenCL REQUIRED)
 add_executable(Pi
         src/Pi/main.cpp
         src/Pi/Pi.cpp src/Pi/Pi.h
+        src/Utility.cpp src/Utility.h
 )
 
 target_link_libraries(Pi
     PUBLIC
         OpenMP::OpenMP_CXX
+        OpenCL
 )
 
 add_executable(OpenCLBasics
@@ -34,3 +36,4 @@ add_custom_target(CopyScripts ALL
 )
 
 add_dependencies(OpenCLBasics CopyScripts)
+add_dependencies(Pi CopyScripts)
