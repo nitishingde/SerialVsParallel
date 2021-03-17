@@ -11,6 +11,7 @@ void hello_world() {
     auto devices = context.getInfo<CL_CONTEXT_DEVICES>(&status);
     verifyOpenCL_Status(status);
     auto device = devices.front();
+    printOpenCL_DeviceInfo(device);
 
     cl::Program program(context, readScript("HelloWorld.cl"), false, &status);
     verifyOpenCL_Status(status);
@@ -24,6 +25,7 @@ void hello_world() {
     cl::Kernel kernel(program, "helloWorld", &status);
     verifyOpenCL_Status(status);
     verifyOpenCL_Status(kernel.setArg(0, memBuf));
+    printOpenCL_KernelWorkGroupInfo(kernel, device);
 
     cl::CommandQueue queue(context, device, 0 &status);
     verifyOpenCL_Status(status);

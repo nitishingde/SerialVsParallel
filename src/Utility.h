@@ -19,5 +19,9 @@ std::string getOpenCL_ErrorMessage(cl_int error);
 
 void verifyOpenCL_Status(cl_int status);
 
+void printOpenCL_DeviceInfo(const cl::Device &device);
+
+void printOpenCL_KernelWorkGroupInfo(const cl::Kernel &kernel, const cl::Device &device);
+
 
 #endif //TRYOPENCL_UTILITY_H

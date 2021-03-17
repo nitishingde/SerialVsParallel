@@ -100,3 +100,35 @@ void verifyOpenCL_Status(cl_int status) {
         throw OpenCL_Exception(status);
     }
 }
+
+void printOpenCL_DeviceInfo(const cl::Device &device) {
+    printf("Device Profile                               : %s\n", device.getInfo<CL_DEVICE_PROFILE>().c_str());
+    printf("Device Max Compute Units                     : %u\n", device.getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>());
+
+    auto maxWorkItemSizes = device.getInfo<CL_DEVICE_MAX_WORK_ITEM_SIZES>();
+    printf("Device Max Work Item Sizes                   : ");
+    for(auto sz: maxWorkItemSizes) {
+        printf("%lu, ", sz);
+    }
+    printf("\b\b\n");
+
+    printf("Device Max Work Group Size                   : %lu\n", device.getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>());
+    printf("Device Max Work Item Dimensions              : %u\n", device.getInfo<CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS>());
+
+    printf("Device Local Memory Size                     : %lu\n", device.getInfo<CL_DEVICE_LOCAL_MEM_SIZE>());
+    printf("Device Global Memory Size                    : %lu\n", device.getInfo<CL_DEVICE_GLOBAL_MEM_SIZE>());
+    printf("Device Local Memory Size/Compute Unit        : %u\n", device.getInfo<CL_DEVICE_LOCAL_MEM_SIZE_PER_COMPUTE_UNIT_AMD>());
+
+    printf("Device Extensions support                    : %s\n", device.getInfo<CL_DEVICE_EXTENSIONS>().c_str());
+    printf("\n");
+}
+
+void printOpenCL_KernelWorkGroupInfo(const cl::Kernel &kernel, const cl::Device &device) {
+    printf("Kernel Work Group Size                       : %lu\n", kernel.getWorkGroupInfo<CL_KERNEL_WORK_GROUP_SIZE>(device));
+    printf("Kernel Preferred Max Work Group Size Multiple: %lu\n", kernel.getWorkGroupInfo<CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE>(device));
+    auto kernelCompileWorkGroupSize = kernel.getWorkGroupInfo<CL_KERNEL_COMPILE_WORK_GROUP_SIZE>(device);
+    printf("Kernel Compiled Work Group Size              : %lu, %lu, %lu\n", kernelCompileWorkGroupSize[0], kernelCompileWorkGroupSize[1], kernelCompileWorkGroupSize[2]);
+    printf("Kernel Private Memory Size                   : %lu\n", kernel.getWorkGroupInfo<CL_KERNEL_PRIVATE_MEM_SIZE>(device));
+    printf("Kernel Local Memory Size                     : %lu\n", kernel.getWorkGroupInfo<CL_KERNEL_LOCAL_MEM_SIZE>(device));
+    printf("\n");
+}
