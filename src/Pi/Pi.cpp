@@ -3,6 +3,7 @@
 #include <chrono>
 #include <cstdio>
 #include <cmath>
+#include <mpi/mpi.h>
 #include <numeric>
 #include <omp.h>
 #include <regex>
@@ -207,6 +208,46 @@ std::string OpenCL_PiStrategy::toString() {
     return "Calculate Pi using OpenCL";
 }
 
+void MPI_PiStrategy::init() {
+    MPI_Init(nullptr, nullptr);
+}
+
+MPI_PiStrategy::MPI_PiStrategy() {
+    init();
+}
+
+double MPI_PiStrategy::calculatePi(uint32_t steps) {
+    double pi = 0.0;
+    double delta = 1.0 / steps;
+    double area = 0.0;
+
+    int32_t processId, noOfProcesses;
+    MPI_Comm_size(MPI_COMM_WORLD, &noOfProcesses);
+    MPI_Comm_rank(MPI_COMM_WORLD, &processId);
+    MPI_Bcast(&steps, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+#if not NDEBUG
+    if(processId == 0) {
+        printf("\n[Debug] No of processes = %d\n", noOfProcesses);
+    }
+#endif
+
+    for (size_t step = processId; step < steps; step += noOfProcesses) {
+        double x = (step + 0.5) * delta;
+        area += 4.0 / (1.0 + x*x);
+    }
+    area *= delta;
+
+    MPI_Reduce(&area, &pi, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Finalize();
+
+    return pi;
+}
+
+std::string MPI_PiStrategy::toString() {
+    return "Calculate Pi using MPI";
+}
+
 PiBenchMarker::PiBenchMarker(std::unique_ptr<PiStrategy> pPiStrategy)
     : mpPiStrategy(std::move(pPiStrategy))
 {}
@@ -216,11 +257,17 @@ void PiBenchMarker::setPiStrategy(std::unique_ptr<PiStrategy> pPiStrategy) {
 }
 
 void PiBenchMarker::benchmarkCalculatePi(uint32_t iterations, uint32_t steps) const {
+    int32_t processId = 0, isMpiInitialised = false;
+    if(auto status = MPI_Initialized(&isMpiInitialised); status == MPI_SUCCESS and isMpiInitialised) {
+        MPI_Comm_rank(MPI_COMM_WORLD, &processId);
+        iterations = 1;
+    }
+
     std::vector<double> executionTime(iterations, 0.0);
     double pi = 0.0;
 
     for(uint32_t iteration = 0; iteration < executionTime.size(); ++iteration) {
-        printf("\rIteration: %u/%u", iteration+1, iterations);
+        if(processId == 0) printf("\rIteration: %u/%u", iteration+1, iterations);
         fflush(stdout);
 
         auto start = std::chrono::high_resolution_clock::now();
@@ -230,6 +277,7 @@ void PiBenchMarker::benchmarkCalculatePi(uint32_t iterations, uint32_t steps) co
     }
     pi /= iterations;
 
+    if(processId != 0) return;
     printf("\r");
     printf("> Strategy        : %s\n", mpPiStrategy->toString().c_str());
     printf("> Iterations      : %u\n", iterations);
