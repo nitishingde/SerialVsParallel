@@ -7,26 +7,35 @@ set(CMAKE_CXX_STANDARD 20)
 find_package(OpenMP REQUIRED)
 find_package(OpenCL REQUIRED)
 
+add_library(Utility
+    src/Utility.cpp src/Utility.h
+)
+
+target_link_libraries(Utility
+    PUBLIC
+        OpenCL
+)
+
 add_executable(Pi
         src/Pi/main.cpp
         src/Pi/Pi.cpp src/Pi/Pi.h
-        src/Utility.cpp src/Utility.h
 )
 
 target_link_libraries(Pi
     PUBLIC
         OpenMP::OpenMP_CXX
         OpenCL
+        Utility
 )
 
 add_executable(OpenCLBasics
         src/OpenCLBasics/main.cpp
-        src/Utility.cpp src/Utility.h
 )
 
 target_link_libraries(OpenCLBasics
     PUBLIC
         OpenCL
+        Utility
 )
 
 add_custom_target(CopyScripts ALL
