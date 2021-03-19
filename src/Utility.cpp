@@ -163,5 +163,5 @@ bool isMpiRootPid() {
             sIsMpiRootPid = (processId == 0);
         }
     }
-    return sIsMpiRootPid != -1 && sIsMpiRootPid;
+    return (sIsMpiRootPid == -1) or sIsMpiRootPid;
 }
