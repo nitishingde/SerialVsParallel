@@ -18,6 +18,7 @@ add_library(Utility
 target_link_libraries(Utility
     PUBLIC
         OpenCL
+        ${MPI_CXX_LIBRARIES}
 )
 
 add_executable(Pi

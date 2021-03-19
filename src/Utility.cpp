@@ -1,6 +1,7 @@
 #include "Utility.h"
 #include <fstream>
 #include <iostream>
+#include <mpi/mpi.h>
 
 OpenCL_Exception::OpenCL_Exception(cl_int error) {
     mErrorMessage = "[Error] Code, Msg = (" + std::to_string(error) + ", " + getOpenCL_ErrorMessage(error) + ")";
@@ -131,4 +132,36 @@ void printOpenCL_KernelWorkGroupInfo(const cl::Kernel &kernel, const cl::Device 
     printf("Kernel Private Memory Size                   : %lu\n", kernel.getWorkGroupInfo<CL_KERNEL_PRIVATE_MEM_SIZE>(device));
     printf("Kernel Local Memory Size                     : %lu\n", kernel.getWorkGroupInfo<CL_KERNEL_LOCAL_MEM_SIZE>(device));
     printf("\n");
+}
+
+MPI_GlobalLockGuard::MPI_GlobalLockGuard(int32_t argc, char **argv) {
+    int32_t flag = false;
+    if(auto status = MPI_Initialized(&flag); status != MPI_SUCCESS or flag == false) {
+        if(MPI_Init(&argc, &argv) == MPI_SUCCESS) {
+            if(isMpiRootPid()) printf("[MPI_GlobalLockGuard] MPI initialized\n\n");
+        }
+    }
+}
+
+MPI_GlobalLockGuard::~MPI_GlobalLockGuard() {
+    int32_t flag = false;
+    if(auto status = MPI_Initialized(&flag); status == MPI_SUCCESS and flag) {
+        if(MPI_Finalize() == MPI_SUCCESS) {
+            if(isMpiRootPid()) printf("[MPI_GlobalLockGuard] MPI exited\n\n");
+        }
+    }
+}
+
+static int32_t sIsMpiRootPid = -1;
+
+bool isMpiRootPid() {
+    if(sIsMpiRootPid == -1) {
+        int32_t flag = false;
+        if(auto status = MPI_Initialized(&flag); status == MPI_SUCCESS and flag) {
+            int32_t processId;
+            MPI_Comm_rank(MPI_COMM_WORLD, &processId);
+            sIsMpiRootPid = (processId == 0);
+        }
+    }
+    return sIsMpiRootPid != -1 && sIsMpiRootPid;
 }

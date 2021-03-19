@@ -208,14 +208,6 @@ std::string OpenCL_PiStrategy::toString() {
     return "Calculate Pi using OpenCL";
 }
 
-void MPI_PiStrategy::init() {
-    MPI_Init(nullptr, nullptr);
-}
-
-MPI_PiStrategy::MPI_PiStrategy() {
-    init();
-}
-
 double MPI_PiStrategy::calculatePi(uint32_t steps) {
     double pi = 0.0;
     double delta = 1.0 / steps;
@@ -227,9 +219,10 @@ double MPI_PiStrategy::calculatePi(uint32_t steps) {
     MPI_Bcast(&steps, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
 #if not NDEBUG
-    if(processId == 0) {
-        printf("\n[Debug] No of processes = %d\n", noOfProcesses);
+    if(isMpiRootPid()) {
+        printf("[Debug] No of processes = %d\n", noOfProcesses);
     }
+    printf("[Debug] Process Id = %d\n", processId);
 #endif
 
     for (size_t step = processId; step < steps; step += noOfProcesses) {
@@ -239,7 +232,6 @@ double MPI_PiStrategy::calculatePi(uint32_t steps) {
     area *= delta;
 
     MPI_Reduce(&area, &pi, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-    MPI_Finalize();
 
     return pi;
 }
@@ -257,27 +249,31 @@ void PiBenchMarker::setPiStrategy(std::unique_ptr<PiStrategy> pPiStrategy) {
 }
 
 void PiBenchMarker::benchmarkCalculatePi(uint32_t iterations, uint32_t steps) const {
-    int32_t processId = 0, isMpiInitialised = false;
-    if(auto status = MPI_Initialized(&isMpiInitialised); status == MPI_SUCCESS and isMpiInitialised) {
-        MPI_Comm_rank(MPI_COMM_WORLD, &processId);
-        iterations = 1;
-    }
-
     std::vector<double> executionTime(iterations, 0.0);
     double pi = 0.0;
 
     for(uint32_t iteration = 0; iteration < executionTime.size(); ++iteration) {
-        if(processId == 0) printf("\rIteration: %u/%u", iteration+1, iterations);
-        fflush(stdout);
+#if NDEBUG
+        if(isMpiRootPid()) {
+            printf("\rIteration: %u/%u", iteration+1, iterations);
+            fflush(stdout);
+        }
+#endif
 
         auto start = std::chrono::high_resolution_clock::now();
         pi += mpPiStrategy->calculatePi(steps);
         auto end = std::chrono::high_resolution_clock::now();
         executionTime[iteration] = std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count()/1.e9;
+#if not NDEBUG
+        if(isMpiRootPid()) {
+            printf("[Debug] Execution Time for iteration (%u, %u): %0.9gs\n", iteration+1, iterations, executionTime[iteration]);
+        }
+#endif
+
     }
     pi /= iterations;
 
-    if(processId != 0) return;
+    if(!isMpiRootPid()) return;
     printf("\r");
     printf("> Strategy        : %s\n", mpPiStrategy->toString().c_str());
     printf("> Iterations      : %u\n", iterations);

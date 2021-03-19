@@ -60,9 +60,7 @@ public:
 };
 
 class MPI_PiStrategy: public PiStrategy {
-    void init();
 public:
-    explicit MPI_PiStrategy();
     double calculatePi(uint32_t steps) override;
     std::string toString() override;
 };

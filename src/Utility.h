@@ -23,5 +23,18 @@ void printOpenCL_DeviceInfo(const cl::Device &device);
 
 void printOpenCL_KernelWorkGroupInfo(const cl::Kernel &kernel, const cl::Device &device);
 
+/**
+ * Works similar to std::lock_guard
+ * Create this object only once.
+ * It's lifecycle usually should be the entirety of the process execution.
+ * Preferably make a MPI_GlobalLockGuard stack object at the beginning of the main function
+ */
+class MPI_GlobalLockGuard {
+public:
+    MPI_GlobalLockGuard(int32_t argc, char **argv);
+    ~MPI_GlobalLockGuard();
+};
+
+bool isMpiRootPid();
 
 #endif //TRYOPENCL_UTILITY_H
