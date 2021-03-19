@@ -12,7 +12,7 @@
 
 #define CACHE_PADDING 8
 
-double SerialPiStrategy::calculatePi(uint32_t steps) {
+double svp::SerialPiStrategy::calculatePi(uint32_t steps) {
     const double delta = 1.0 / steps;
     double area = 0.0;
 
@@ -24,11 +24,11 @@ double SerialPiStrategy::calculatePi(uint32_t steps) {
     return area * delta;
 }
 
-std::string SerialPiStrategy::toString() {
+std::string svp::SerialPiStrategy::toString() {
     return "Calculate Pi using serial code";
 }
 
-double OpenMP_PiStrategy::calculatePi(uint32_t steps) {
+double svp::OpenMP_PiStrategy::calculatePi(uint32_t steps) {
     const double delta = 1.0 / steps;
     std::vector<double> area(omp_get_max_threads()*2, 0.0);
 
@@ -46,11 +46,11 @@ double OpenMP_PiStrategy::calculatePi(uint32_t steps) {
     return std::accumulate(area.begin(), area.end(), 0.0) * delta;
 }
 
-std::string OpenMP_PiStrategy::toString() {
+std::string svp::OpenMP_PiStrategy::toString() {
     return "Calculate Pi using OpenMP, simplified";
 }
 
-double CacheFriendlyOpenMP_PiStrategy::calculatePi(uint32_t steps) {
+double svp::CacheFriendlyOpenMP_PiStrategy::calculatePi(uint32_t steps) {
     const double delta = 1.0 / steps;
     uint32_t maxThreadsPossible = omp_get_max_threads();
     double area[maxThreadsPossible][CACHE_PADDING];
@@ -77,11 +77,11 @@ double CacheFriendlyOpenMP_PiStrategy::calculatePi(uint32_t steps) {
     return totalArea * delta;
 }
 
-std::string CacheFriendlyOpenMP_PiStrategy::toString() {
+std::string svp::CacheFriendlyOpenMP_PiStrategy::toString() {
     return "Calculate Pi using OpenMP, using cache friendly options";
 }
 
-double AtomicBarrierOpenMP_PiStrategy::calculatePi(uint32_t steps) {
+double svp::AtomicBarrierOpenMP_PiStrategy::calculatePi(uint32_t steps) {
     const double delta = 1.0 / steps;
     double area = 0.0;
 
@@ -101,11 +101,11 @@ double AtomicBarrierOpenMP_PiStrategy::calculatePi(uint32_t steps) {
     return area * delta;
 }
 
-std::string AtomicBarrierOpenMP_PiStrategy::toString() {
+std::string svp::AtomicBarrierOpenMP_PiStrategy::toString() {
     return "Calculate Pi using OpenMP, using atomic barrier";
 }
 
-double ReductionOpenMP_PiStrategy::calculatePi(uint32_t steps) {
+double svp::ReductionOpenMP_PiStrategy::calculatePi(uint32_t steps) {
     const double delta = 1.0 / steps;
     double area = 0.0;
 
@@ -119,51 +119,51 @@ double ReductionOpenMP_PiStrategy::calculatePi(uint32_t steps) {
     return area * delta;
 }
 
-std::string ReductionOpenMP_PiStrategy::toString() {
+std::string svp::ReductionOpenMP_PiStrategy::toString() {
     return "Calculate Pi using OpenMP, using reduction technique";
 }
 
-void OpenCL_PiStrategy::init() {
+void svp::OpenCL_PiStrategy::init() {
     if(isInitialised) return;
 
     cl_int status = CL_SUCCESS;
 
     mContext = cl::Context(CL_DEVICE_TYPE_GPU, nullptr, nullptr, nullptr, &status);
-    verifyOpenCL_Status(status);
+    svp::verifyOpenCL_Status(status);
 
     auto devices = mContext.getInfo<CL_CONTEXT_DEVICES>(&status);
-    verifyOpenCL_Status(status);
+    svp::verifyOpenCL_Status(status);
     mDevice = devices.front();
 
     // 512 on my machine
     mWorkGroupSize = mDevice.getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>(&status);
-    verifyOpenCL_Status(status);
+    svp::verifyOpenCL_Status(status);
 #if not NDEBUG
     printf("[DEBUG] Work Group size: %zu\n", mWorkGroupSize);
 #endif
 
     cl::Program program(
         mContext,
-        std::regex_replace(readScript("Pi.cl"), std::regex("%workGroupSize%"), std::to_string(mWorkGroupSize)),
+        std::regex_replace(svp::readScript("Pi.cl"), std::regex("%workGroupSize%"), std::to_string(mWorkGroupSize)),
         false,
         &status
     );
-    verifyOpenCL_Status(status);
-    verifyOpenCL_Status(program.build("-cl-std=CL1.2"));
+    svp::verifyOpenCL_Status(status);
+    svp::verifyOpenCL_Status(program.build("-cl-std=CL1.2"));
     mKernel = cl::Kernel(program, "calculatePi", &status);
-    verifyOpenCL_Status(status);
+    svp::verifyOpenCL_Status(status);
 
     mCommandQueue = cl::CommandQueue(mContext, mDevice, 0, &status);
-    verifyOpenCL_Status(status);
+    svp::verifyOpenCL_Status(status);
 
     isInitialised = true;
 }
 
-OpenCL_PiStrategy::OpenCL_PiStrategy() {
+svp::OpenCL_PiStrategy::OpenCL_PiStrategy() {
     init();
 }
 
-double OpenCL_PiStrategy::calculatePi(uint32_t steps) {
+double svp::OpenCL_PiStrategy::calculatePi(uint32_t steps) {
     cl_int status = CL_SUCCESS;
     const double delta = 1.0 / steps;
 
@@ -177,14 +177,14 @@ double OpenCL_PiStrategy::calculatePi(uint32_t steps) {
         workGroupArea.data(),
         &status
     );
-    verifyOpenCL_Status(status);
+    svp::verifyOpenCL_Status(status);
 
-    verifyOpenCL_Status(mKernel.setArg(0, workGroupAreaBuffer));
-    verifyOpenCL_Status(mKernel.setArg(1, (uint32_t)N));
-    verifyOpenCL_Status(mKernel.setArg(2, (uint32_t)steps));
+    svp::verifyOpenCL_Status(mKernel.setArg(0, workGroupAreaBuffer));
+    svp::verifyOpenCL_Status(mKernel.setArg(1, (uint32_t)N));
+    svp::verifyOpenCL_Status(mKernel.setArg(2, (uint32_t)steps));
 
     VECTOR_CLASS<cl::Event> blockers(1);
-    verifyOpenCL_Status(mCommandQueue.enqueueNDRangeKernel(
+    svp::verifyOpenCL_Status(mCommandQueue.enqueueNDRangeKernel(
         mKernel,
         cl::NullRange,
         cl::NDRange(N*mWorkGroupSize),
@@ -192,7 +192,7 @@ double OpenCL_PiStrategy::calculatePi(uint32_t steps) {
         nullptr,
         &blockers.front()
     ));
-    verifyOpenCL_Status(mCommandQueue.enqueueReadBuffer(
+    svp::verifyOpenCL_Status(mCommandQueue.enqueueReadBuffer(
         workGroupAreaBuffer,
         CL_TRUE,
         0,
@@ -204,11 +204,11 @@ double OpenCL_PiStrategy::calculatePi(uint32_t steps) {
     return std::accumulate(workGroupArea.begin(), workGroupArea.end(), 0.0) * delta;
 }
 
-std::string OpenCL_PiStrategy::toString() {
+std::string svp::OpenCL_PiStrategy::toString() {
     return "Calculate Pi using OpenCL";
 }
 
-double MPI_PiStrategy::calculatePi(uint32_t steps) {
+double svp::MPI_PiStrategy::calculatePi(uint32_t steps) {
     double pi = 0.0;
     double delta = 1.0 / steps;
     double area = 0.0;
@@ -219,7 +219,7 @@ double MPI_PiStrategy::calculatePi(uint32_t steps) {
     MPI_Bcast(&steps, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
 #if not NDEBUG
-    if(isMpiRootPid()) {
+    if(svp::isMpiRootPid()) {
         printf("[Debug] No of processes = %d\n", noOfProcesses);
     }
     printf("[Debug] Process Id = %d\n", processId);
@@ -236,11 +236,11 @@ double MPI_PiStrategy::calculatePi(uint32_t steps) {
     return pi;
 }
 
-std::string MPI_PiStrategy::toString() {
+std::string svp::MPI_PiStrategy::toString() {
     return "Calculate Pi using MPI";
 }
 
-double HybridMpiOpenMP_PiStrategy::calculatePi(uint32_t steps) {
+double svp::HybridMpiOpenMP_PiStrategy::calculatePi(uint32_t steps) {
     double pi = 0.0;
     double delta = 1.0 / steps;
     double area = 0.0;
@@ -251,7 +251,7 @@ double HybridMpiOpenMP_PiStrategy::calculatePi(uint32_t steps) {
     MPI_Bcast(&steps, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
 #if not NDEBUG
-    if(isMpiRootPid()) {
+    if(svp::isMpiRootPid()) {
         printf("[Debug] No of processes = %d\n", noOfProcesses);
     }
     printf("[Debug] Process Id      = %d\n", processId);
@@ -270,25 +270,25 @@ double HybridMpiOpenMP_PiStrategy::calculatePi(uint32_t steps) {
     return pi;
 }
 
-std::string HybridMpiOpenMP_PiStrategy::toString() {
+std::string svp::HybridMpiOpenMP_PiStrategy::toString() {
     return "Calculate Pi using MPI and OpenMP";
 }
 
-PiBenchMarker::PiBenchMarker(std::unique_ptr<PiStrategy> pPiStrategy)
+svp::PiBenchMarker::PiBenchMarker(std::unique_ptr<PiStrategy> pPiStrategy)
     : mpPiStrategy(std::move(pPiStrategy))
 {}
 
-void PiBenchMarker::setPiStrategy(std::unique_ptr<PiStrategy> pPiStrategy) {
+void svp::PiBenchMarker::setPiStrategy(std::unique_ptr<PiStrategy> pPiStrategy) {
     mpPiStrategy = std::move(pPiStrategy);
 }
 
-void PiBenchMarker::benchmarkCalculatePi(uint32_t iterations, uint32_t steps) const {
+void svp::PiBenchMarker::benchmarkCalculatePi(uint32_t iterations, uint32_t steps) const {
     std::vector<double> executionTime(iterations, 0.0);
     double pi = 0.0;
 
     for(uint32_t iteration = 0; iteration < executionTime.size(); ++iteration) {
 #if NDEBUG
-        if(isMpiRootPid()) {
+        if(svp::isMpiRootPid()) {
             printf("\rIteration: %u/%u", iteration+1, iterations);
             fflush(stdout);
         }
@@ -299,7 +299,7 @@ void PiBenchMarker::benchmarkCalculatePi(uint32_t iterations, uint32_t steps) co
         auto end = std::chrono::high_resolution_clock::now();
         executionTime[iteration] = std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count()/1.e9;
 #if not NDEBUG
-        if(isMpiRootPid()) {
+        if(svp::isMpiRootPid()) {
             printf("[Debug] Execution Time for iteration (%u, %u): %0.9gs\n", iteration+1, iterations, executionTime[iteration]);
         }
 #endif
@@ -307,7 +307,7 @@ void PiBenchMarker::benchmarkCalculatePi(uint32_t iterations, uint32_t steps) co
     }
     pi /= iterations;
 
-    if(!isMpiRootPid()) return;
+    if(!svp::isMpiRootPid()) return;
     printf("\r");
     printf("> Strategy        : %s\n", mpPiStrategy->toString().c_str());
     printf("> Iterations      : %u\n", iterations);

@@ -2,14 +2,14 @@
 #include "../Utility.h"
 
 int main(int argc, char **argv) {
-    MPI_GlobalLockGuard lock(argc, argv);
+    svp::MPI_GlobalLockGuard lock(argc, argv);
 
-    PiBenchMarker piBenchMarker;
+    svp::PiBenchMarker piBenchMarker;
     for(auto &pPiStrategy: {
-        static_cast<PiStrategy*>(new MPI_PiStrategy()),
-        static_cast<PiStrategy*>(new HybridMpiOpenMP_PiStrategy()),
+        static_cast<svp::PiStrategy*>(new svp::MPI_PiStrategy()),
+        static_cast<svp::PiStrategy*>(new svp::HybridMpiOpenMP_PiStrategy()),
     }) {
-        piBenchMarker.setPiStrategy(std::unique_ptr<PiStrategy>(pPiStrategy));
+        piBenchMarker.setPiStrategy(std::unique_ptr<svp::PiStrategy>(pPiStrategy));
         piBenchMarker.benchmarkCalculatePi(10, 1e8);
     }
 

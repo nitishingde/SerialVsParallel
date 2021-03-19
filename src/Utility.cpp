@@ -3,24 +3,24 @@
 #include <iostream>
 #include <mpi/mpi.h>
 
-OpenCL_Exception::OpenCL_Exception(cl_int error) {
-    mErrorMessage = "[Error] Code, Msg = (" + std::to_string(error) + ", " + getOpenCL_ErrorMessage(error) + ")";
+svp::OpenCL_Exception::OpenCL_Exception(cl_int error) {
+    mErrorMessage = "[Error] Code, Msg = (" + std::to_string(error) + ", " + svp::getOpenCL_ErrorMessage(error) + ")";
 }
 
-OpenCL_Exception::OpenCL_Exception(std::string errorMessage) {
+svp::OpenCL_Exception::OpenCL_Exception(std::string errorMessage) {
     mErrorMessage = errorMessage;
 }
 
-const char *OpenCL_Exception::what() const noexcept {
+const char* svp::OpenCL_Exception::what() const noexcept {
     return mErrorMessage.c_str();
 }
 
-std::string readScript(const std::string &scriptFilePath) {
+std::string svp::readScript(const std::string &scriptFilePath) {
     std::ifstream scriptFile(scriptFilePath);
     return std::string(std::istreambuf_iterator<char>(scriptFile), (std::istreambuf_iterator<char>()));
 }
 
-std::string getOpenCL_ErrorMessage(cl_int error) {
+std::string svp::getOpenCL_ErrorMessage(cl_int error) {
     switch(error) {
         // run-time and JIT compiler errors
         case 0: return "CL_SUCCESS";
@@ -96,13 +96,13 @@ std::string getOpenCL_ErrorMessage(cl_int error) {
     }
 }
 
-void verifyOpenCL_Status(cl_int status) {
+void svp::verifyOpenCL_Status(cl_int status) {
     if(status != CL_SUCCESS) {
-        throw OpenCL_Exception(status);
+        throw svp::OpenCL_Exception(status);
     }
 }
 
-void printOpenCL_DeviceInfo(const cl::Device &device) {
+void svp::printOpenCL_DeviceInfo(const cl::Device &device) {
     printf("Device Profile                               : %s\n", device.getInfo<CL_DEVICE_PROFILE>().c_str());
     printf("Device Max Compute Units                     : %u\n", device.getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>());
 
@@ -124,7 +124,7 @@ void printOpenCL_DeviceInfo(const cl::Device &device) {
     printf("\n");
 }
 
-void printOpenCL_KernelWorkGroupInfo(const cl::Kernel &kernel, const cl::Device &device) {
+void svp::printOpenCL_KernelWorkGroupInfo(const cl::Kernel &kernel, const cl::Device &device) {
     printf("Kernel Work Group Size                       : %lu\n", kernel.getWorkGroupInfo<CL_KERNEL_WORK_GROUP_SIZE>(device));
     printf("Kernel Preferred Max Work Group Size Multiple: %lu\n", kernel.getWorkGroupInfo<CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE>(device));
     auto kernelCompileWorkGroupSize = kernel.getWorkGroupInfo<CL_KERNEL_COMPILE_WORK_GROUP_SIZE>(device);
@@ -134,27 +134,27 @@ void printOpenCL_KernelWorkGroupInfo(const cl::Kernel &kernel, const cl::Device 
     printf("\n");
 }
 
-MPI_GlobalLockGuard::MPI_GlobalLockGuard(int32_t argc, char **argv) {
+svp::MPI_GlobalLockGuard::MPI_GlobalLockGuard(int32_t argc, char **argv) {
     int32_t flag = false;
     if(auto status = MPI_Initialized(&flag); status != MPI_SUCCESS or flag == false) {
         if(MPI_Init(&argc, &argv) == MPI_SUCCESS) {
-            if(isMpiRootPid()) printf("[MPI_GlobalLockGuard] MPI initialized\n\n");
+            if(svp::isMpiRootPid()) printf("[MPI_GlobalLockGuard] MPI initialized\n\n");
         }
     }
 }
 
-MPI_GlobalLockGuard::~MPI_GlobalLockGuard() {
+svp::MPI_GlobalLockGuard::~MPI_GlobalLockGuard() {
     int32_t flag = false;
     if(auto status = MPI_Initialized(&flag); status == MPI_SUCCESS and flag) {
         if(MPI_Finalize() == MPI_SUCCESS) {
-            if(isMpiRootPid()) printf("[MPI_GlobalLockGuard] MPI exited\n\n");
+            if(svp::isMpiRootPid()) printf("[MPI_GlobalLockGuard] MPI exited\n\n");
         }
     }
 }
 
 static int32_t sIsMpiRootPid = -1;
 
-bool isMpiRootPid() {
+bool svp::isMpiRootPid() {
     if(sIsMpiRootPid == -1) {
         int32_t flag = false;
         if(auto status = MPI_Initialized(&flag); status == MPI_SUCCESS and flag) {
