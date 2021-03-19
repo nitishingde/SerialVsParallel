@@ -240,6 +240,40 @@ std::string MPI_PiStrategy::toString() {
     return "Calculate Pi using MPI";
 }
 
+double HybridMpiOpenMP_PiStrategy::calculatePi(uint32_t steps) {
+    double pi = 0.0;
+    double delta = 1.0 / steps;
+    double area = 0.0;
+
+    int32_t processId, noOfProcesses;
+    MPI_Comm_size(MPI_COMM_WORLD, &noOfProcesses);
+    MPI_Comm_rank(MPI_COMM_WORLD, &processId);
+    MPI_Bcast(&steps, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+#if not NDEBUG
+    if(isMpiRootPid()) {
+        printf("[Debug] No of processes = %d\n", noOfProcesses);
+    }
+    printf("[Debug] Process Id      = %d\n", processId);
+#endif
+
+    omp_set_num_threads(omp_get_max_threads());
+    #pragma omp parallel for reduction(+:area) firstprivate(steps, delta, processId, noOfProcesses) default(none)
+    for (size_t step = processId; step < steps; step += noOfProcesses) {
+        double x = (step + 0.5) * delta;
+        area += 4.0 / (1.0 + x*x);
+    }
+    area *= delta;
+
+    MPI_Reduce(&area, &pi, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+
+    return pi;
+}
+
+std::string HybridMpiOpenMP_PiStrategy::toString() {
+    return "Calculate Pi using MPI and OpenMP";
+}
+
 PiBenchMarker::PiBenchMarker(std::unique_ptr<PiStrategy> pPiStrategy)
     : mpPiStrategy(std::move(pPiStrategy))
 {}
