@@ -6,9 +6,6 @@ set(CMAKE_CXX_STANDARD 20)
 
 find_package(OpenMP REQUIRED)
 find_package(OpenCL REQUIRED)
-
-# FIXME: Help cmake find a way to find the MPI lib files
-set(MPI_CXX_LIBRARIES "/usr/lib/mpich/lib/libmpichcxx.so")
 find_package(MPI REQUIRED)
 
 add_library(Utility
@@ -18,7 +15,7 @@ add_library(Utility
 target_link_libraries(Utility
     PUBLIC
         OpenCL
-        ${MPI_CXX_LIBRARIES}
+        MPI::MPI_CXX
 )
 
 add_executable(Pi
@@ -31,7 +28,7 @@ target_link_libraries(Pi
         OpenMP::OpenMP_CXX
         OpenCL
         Utility
-        ${MPI_CXX_LIBRARIES}
+        MPI::MPI_CXX
 )
 
 add_executable(MPI_Pi
@@ -44,7 +41,7 @@ target_link_libraries(MPI_Pi
         OpenMP::OpenMP_CXX
         OpenCL
         Utility
-        ${MPI_CXX_LIBRARIES}
+        MPI::MPI_CXX
 )
 
 add_executable(OpenCLBasics
