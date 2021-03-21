@@ -57,3 +57,8 @@ target_link_libraries(OpenCLBasics
         Utility
 )
 add_dependencies(OpenCLBasics CopyScripts)
+
+add_executable(MatrixMultiplication
+        src/MatrixMultiplication/main.cpp
+        src/MatrixMultiplication/MatrixMultiplication.cpp src/MatrixMultiplication/MatrixMultiplication.h
+)
