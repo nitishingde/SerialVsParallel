@@ -24,6 +24,12 @@ namespace svp {
         std::string toString() override;
     };
 
+    class OpenMP_DotProductStrategy: public DotProductStrategy {
+    public:
+        void calculateDotProduct(const Matrix &matrix1, const Matrix &matrix2, Matrix &result) override;
+        std::string toString() override;
+    };
+
     class DotProductBenchMarker {
     private:
         std::unique_ptr<DotProductStrategy> mpDotProductStrategy = nullptr;

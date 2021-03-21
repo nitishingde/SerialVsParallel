@@ -8,13 +8,18 @@ int main(int argc, char **argv) {
     auto matrix2 = svp::Matrix(size/2, std::vector<svp::MatrixElementType>(size, 2));
     auto result = svp::Matrix(size, std::vector<svp::MatrixElementType>(size, size));
 
-    dotProductBenchMarker.setDotProductStrategy(std::make_unique<svp::SerialDotProductStrategy>());
-    dotProductBenchMarker.benchmarkCalculateDotProduct(
-        10,
-        matrix1,
-        matrix2,
-        result
-    );
+    for(auto &pDotProductStrategy: {
+        static_cast<svp::DotProductStrategy*>(new svp::SerialDotProductStrategy()),
+        static_cast<svp::DotProductStrategy*>(new svp::OpenMP_DotProductStrategy()),
+    }) {
+        dotProductBenchMarker.setDotProductStrategy(std::unique_ptr<svp::DotProductStrategy>(pDotProductStrategy));
+        dotProductBenchMarker.benchmarkCalculateDotProduct(
+            10,
+            matrix1,
+            matrix2,
+            result
+        );
+    }
 
     return 0;
 }

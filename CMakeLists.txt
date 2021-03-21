@@ -62,3 +62,7 @@ add_executable(MatrixMultiplication
         src/MatrixMultiplication/main.cpp
         src/MatrixMultiplication/MatrixMultiplication.cpp src/MatrixMultiplication/MatrixMultiplication.h
 )
+target_link_libraries(MatrixMultiplication
+    PUBLIC
+        OpenMP::OpenMP_CXX
+)

@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <chrono>
 #include <numeric>
+#include <omp.h>
 
 bool svp::DotProductStrategy::verifyMatrices(const svp::Matrix &matrix1, const svp::Matrix &matrix2, const svp::Matrix &result) {
     return
@@ -26,6 +27,29 @@ void svp::SerialDotProductStrategy::calculateDotProduct(const svp::Matrix &matri
 
 std::string svp::SerialDotProductStrategy::toString() {
     return "Calculate Dot Product of 2 matrices using serial code";
+}
+
+void svp::OpenMP_DotProductStrategy::calculateDotProduct(const svp::Matrix &matrix1, const svp::Matrix &matrix2, svp::Matrix &result) {
+    if(!verifyMatrices(matrix1, matrix2, result)) return;
+
+    omp_set_num_threads(omp_get_num_procs());
+    #pragma omp parallel for default(none) shared(matrix1, matrix2, result)
+    for(size_t i = 0; i < matrix1.size(); ++i) {
+        // Parallelizing inner loops gives pretty bad performance, since threads are spawned and killed multiple no. of times, leading to a large overhead
+        //#pragma omp parallel for default(none) firstprivate(i) shared(matrix1, matrix2, result)
+        for(size_t j = 0; j < matrix2[0].size(); ++j) {
+            result[i][j] = svp::MatrixElementType(0);
+            // Apart from being stupidly slow, this has a race condition
+            //#pragma omp parallel for default(none) firstprivate(i, j) shared(matrix1, matrix2, result)
+            for(size_t k = 0; k < matrix2.size() /*or matrix1[0].size() */; ++k) {
+                result[i][j] += matrix1[i][k] * matrix2[k][j];
+            }
+        }
+    }
+}
+
+std::string svp::OpenMP_DotProductStrategy::toString() {
+    return "Calculate Dot Product of 2 matrices using OpenMP";
 }
 
 svp::DotProductBenchMarker::DotProductBenchMarker(std::unique_ptr<DotProductStrategy> pDotProductStrategy)
