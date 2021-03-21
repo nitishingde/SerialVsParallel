@@ -33,7 +33,7 @@ double svp::OpenMP_PiStrategy::calculatePi(uint32_t steps) {
     std::vector<double> area(omp_get_max_threads()*2, 0.0);
 
     omp_set_num_threads(omp_get_max_threads());
-    #pragma omp parallel firstprivate(steps, delta) shared(area) default(none)
+    #pragma omp parallel default(none) firstprivate(steps, delta) shared(area)
     {
         auto totalThreads = omp_get_num_threads();
         auto threadID = omp_get_thread_num();
@@ -59,7 +59,7 @@ double svp::CacheFriendlyOpenMP_PiStrategy::calculatePi(uint32_t steps) {
     }
 
     omp_set_num_threads(omp_get_max_threads());
-    #pragma omp parallel firstprivate(steps, delta) shared(area) default(none)
+    #pragma omp parallel default(none) firstprivate(steps, delta) shared(area)
     {
         auto totalThreads = omp_get_num_threads();
         auto threadID = omp_get_thread_num();
@@ -86,7 +86,7 @@ double svp::AtomicBarrierOpenMP_PiStrategy::calculatePi(uint32_t steps) {
     double area = 0.0;
 
     omp_set_num_threads(omp_get_max_threads());
-    #pragma omp parallel firstprivate(steps, delta) shared(area) default(none)
+    #pragma omp parallel default(none) firstprivate(steps, delta) shared(area)
     {
         auto totalThreads = omp_get_num_threads();
         double area_t = 0.0;
@@ -110,7 +110,7 @@ double svp::ReductionOpenMP_PiStrategy::calculatePi(uint32_t steps) {
     double area = 0.0;
 
     omp_set_num_threads(omp_get_max_threads());
-    #pragma omp parallel for reduction(+:area) firstprivate(steps, delta) default(none)
+    #pragma omp parallel for reduction(+:area) default(none) firstprivate(steps, delta)
     for(uint32_t step = 0; step < steps; ++step) {
         double x = (step + 0.5) * delta;
         area += 4.0 / (1.0 + x*x);
@@ -258,7 +258,7 @@ double svp::HybridMpiOpenMP_PiStrategy::calculatePi(uint32_t steps) {
 #endif
 
     omp_set_num_threads(omp_get_max_threads());
-    #pragma omp parallel for reduction(+:area) firstprivate(steps, delta, processId, noOfProcesses) default(none)
+    #pragma omp parallel for reduction(+:area) default(none) firstprivate(steps, delta, processId, noOfProcesses)
     for (size_t step = processId; step < steps; step += noOfProcesses) {
         double x = (step + 0.5) * delta;
         area += 4.0 / (1.0 + x*x);
