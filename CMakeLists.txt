@@ -64,5 +64,8 @@ add_executable(MatrixMultiplication
 )
 target_link_libraries(MatrixMultiplication
     PUBLIC
+        OpenCL
         OpenMP::OpenMP_CXX
+        Utility
 )
+add_dependencies(MatrixMultiplication CopyScripts)

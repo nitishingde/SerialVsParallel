@@ -11,6 +11,7 @@ int main(int argc, char **argv) {
     for(auto &pDotProductStrategy: {
         static_cast<svp::DotProductStrategy*>(new svp::SerialDotProductStrategy()),
         static_cast<svp::DotProductStrategy*>(new svp::OpenMP_DotProductStrategy()),
+        static_cast<svp::DotProductStrategy*>(new svp::OpenCL_DotProductStrategy()),
     }) {
         dotProductBenchMarker.setDotProductStrategy(std::unique_ptr<svp::DotProductStrategy>(pDotProductStrategy));
         dotProductBenchMarker.benchmarkCalculateDotProduct(
