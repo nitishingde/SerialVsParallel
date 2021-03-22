@@ -7,10 +7,6 @@ svp::OpenCL_Exception::OpenCL_Exception(cl_int error) {
     mErrorMessage = "[Error] Code, Msg = (" + std::to_string(error) + ", " + svp::getOpenCL_ErrorMessage(error) + ")";
 }
 
-svp::OpenCL_Exception::OpenCL_Exception(std::string errorMessage) {
-    mErrorMessage = errorMessage;
-}
-
 const char* svp::OpenCL_Exception::what() const noexcept {
     return mErrorMessage.c_str();
 }

@@ -10,7 +10,6 @@ namespace svp {
         std::string mErrorMessage;
     public:
         explicit OpenCL_Exception(cl_int error);
-        explicit OpenCL_Exception(std::string errorMessage);
         [[nodiscard]] const char *what() const _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_USE_NOEXCEPT override;
     };
 
