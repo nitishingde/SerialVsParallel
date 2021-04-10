@@ -31,9 +31,8 @@ void hello_world() {
 
     // try commenting the writeBuffer line below, observe how it behaves
     svp::verifyOpenCL_Status(queue.enqueueWriteBuffer(memBuf, CL_TRUE, 0, sizeof(buf), buf));
-    VECTOR_CLASS<cl::Event> blockers(1);
-    svp::verifyOpenCL_Status(queue.enqueueTask(kernel, nullptr, &blockers.front()));
-    svp::verifyOpenCL_Status(queue.enqueueReadBuffer(memBuf, CL_TRUE, 0, sizeof(buf), buf, &blockers));
+    svp::verifyOpenCL_Status(queue.enqueueTask(kernel, nullptr, nullptr));
+    svp::verifyOpenCL_Status(queue.enqueueReadBuffer(memBuf, CL_TRUE, 0, sizeof(buf), buf, nullptr));
 
     printf("%s\n\n", buf);
 }
@@ -78,16 +77,15 @@ void visualise_execution_model() {
         cl::Kernel kernel(program, kernelName, &status);
         svp::verifyOpenCL_Status(status);
         svp::verifyOpenCL_Status(kernel.setArg(0, matrixMem));
-        VECTOR_CLASS<cl::Event> blockers(1);
         svp::verifyOpenCL_Status(commandQueue.enqueueNDRangeKernel(
             kernel,
             cl::NullRange,
             cl::NDRange(globalDimX, globalDimY/*, 1*/),
             cl::NDRange(localDimX, localDimY/*, 1*/),
             nullptr,
-            &blockers.front()
+            nullptr
         ));
-        svp::verifyOpenCL_Status(commandQueue.enqueueReadBuffer(matrixMem, CL_TRUE, 0, sizeof(matrix), matrix, &blockers));
+        svp::verifyOpenCL_Status(commandQueue.enqueueReadBuffer(matrixMem, CL_TRUE, 0, sizeof(matrix), matrix, nullptr));
         printf("%s\n", message);
         printf("Global dimensions: (%zu, %zu, 1)\n", globalDimX, globalDimY);
         printf("Local dimensions : (%zu, %zu, 1)\n", localDimX, localDimY);
@@ -104,16 +102,15 @@ void visualise_execution_model() {
         cl::Kernel kernel(program, kernelName, &status);
         svp::verifyOpenCL_Status(status);
         svp::verifyOpenCL_Status(kernel.setArg(0, matrixMem));
-        VECTOR_CLASS<cl::Event> blockers(1);
         svp::verifyOpenCL_Status(commandQueue.enqueueNDRangeKernel(
             kernel,
             cl::NullRange,
             cl::NDRange(globalDimX * globalDimY),
             cl::NDRange(localDimX * localDimX),
             nullptr,
-            &blockers.front()
+            nullptr
         ));
-        svp::verifyOpenCL_Status(commandQueue.enqueueReadBuffer(matrixMem, CL_TRUE, 0, sizeof(matrix), matrix, &blockers));
+        svp::verifyOpenCL_Status(commandQueue.enqueueReadBuffer(matrixMem, CL_TRUE, 0, sizeof(matrix), matrix, nullptr));
         printf("%s\n", message);
         printf("Global dimensions: (%zu, 1, 1)\n", globalDimX * globalDimY);
         printf("Local dimensions : (%zu, 1, 1)\n", localDimX * localDimY);
