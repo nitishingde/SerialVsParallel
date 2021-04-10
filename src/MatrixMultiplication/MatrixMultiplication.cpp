@@ -122,18 +122,17 @@ void svp::OpenCL_DotProductStrategy::calculateDotProduct(const svp::Matrix &matr
 
     size_t globalDimX = std::ceil(result.size()/(double)mWorkGroupSize2D) * mWorkGroupSize2D;
     size_t globalDimY = std::ceil(result[0].size()/(double)mWorkGroupSize2D) * mWorkGroupSize2D;
-    VECTOR_CLASS<cl::Event> blockers(1);
     verifyOpenCL_Status(mCommandQueue.enqueueNDRangeKernel(
         mKernel,
         cl::NullRange,
         cl::NDRange(globalDimX, globalDimY),
         cl::NDRange(mWorkGroupSize2D, mWorkGroupSize2D),
         nullptr,
-        &blockers.front()
+        nullptr
     ));
 
     for(size_t row = 0, rowSize = result[0].size()*sizeof(MatrixElementType); row < result.size(); ++row) {
-        verifyOpenCL_Status(mCommandQueue.enqueueReadBuffer(resultBuffer, CL_TRUE, row*rowSize, rowSize, result[row].data(), &blockers));
+        verifyOpenCL_Status(mCommandQueue.enqueueReadBuffer(resultBuffer, CL_TRUE, row*rowSize, rowSize, result[row].data(), nullptr));
     }
 }
 
