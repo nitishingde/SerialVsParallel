@@ -183,14 +183,13 @@ double svp::OpenCL_PiStrategy::calculatePi(uint32_t steps) {
     svp::verifyOpenCL_Status(mKernel.setArg(1, (uint32_t)N));
     svp::verifyOpenCL_Status(mKernel.setArg(2, (uint32_t)steps));
 
-    VECTOR_CLASS<cl::Event> blockers(1);
     svp::verifyOpenCL_Status(mCommandQueue.enqueueNDRangeKernel(
         mKernel,
         cl::NullRange,
         cl::NDRange(N*mWorkGroupSize),
         cl::NDRange(mWorkGroupSize),
         nullptr,
-        &blockers.front()
+        nullptr
     ));
     svp::verifyOpenCL_Status(mCommandQueue.enqueueReadBuffer(
         workGroupAreaBuffer,
@@ -198,7 +197,7 @@ double svp::OpenCL_PiStrategy::calculatePi(uint32_t steps) {
         0,
         workGroupArea.size() * sizeof(decltype(workGroupArea)::value_type),
         workGroupArea.data(),
-        &blockers
+        nullptr
     ));
 
     return std::accumulate(workGroupArea.begin(), workGroupArea.end(), 0.0) * delta;
