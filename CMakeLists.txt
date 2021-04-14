@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD 20)
 find_package(OpenMP REQUIRED)
 find_package(OpenCL REQUIRED)
 find_package(MPI REQUIRED)
+find_package(OpenCV REQUIRED)
 
 add_custom_target(CopyScripts ALL
         COMMAND ${CMAKE_COMMAND} -E copy_directory
@@ -69,3 +70,13 @@ target_link_libraries(MatrixMultiplication
         Utility
 )
 add_dependencies(MatrixMultiplication CopyScripts)
+
+add_executable(ImageProcessing
+        src/ImageProcessing/main.cpp
+        src/ImageProcessing/ImageProcessing.cpp src/ImageProcessing/ImageProcessing.h
+)
+target_link_libraries(ImageProcessing
+    PUBLIC
+        ${OpenCV_LIBS}
+)
+add_dependencies(ImageProcessing CopyScripts)
