@@ -10,6 +10,7 @@ int main(int argc, char **argv) {
     svp::ImageScalingBenchMarker imageScalingBenchMarker;
     for(auto [pImageScalingStrategy, interpolationFlag]: {
         std::make_tuple(static_cast<svp::ImageScalingStrategy*>(new svp::NNI_Serial()), cv::InterpolationFlags::INTER_NEAREST),
+        std::make_tuple(static_cast<svp::ImageScalingStrategy*>(new svp::NNI_OpenCL()), cv::InterpolationFlags::INTER_NEAREST),
     }) {
         imageScalingBenchMarker.setImageScalingStrategy(std::unique_ptr<svp::ImageScalingStrategy>(pImageScalingStrategy));
         cv::Mat expectedResult;

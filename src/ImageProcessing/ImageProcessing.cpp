@@ -1,4 +1,5 @@
 #include "ImageProcessing.h"
+#include "../Utility.h"
 #include <chrono>
 #include <numeric>
 
@@ -23,6 +24,81 @@ cv::Mat svp::NNI_Serial::transform(const cv::Mat &image, float scaleX, float sca
 
 std::string svp::NNI_Serial::toString() {
     return "Scaling image using Nearest Neighbour Interpolation using serial code";
+}
+
+svp::NNI_OpenCL::NNI_OpenCL() {
+    init();
+}
+
+void svp::NNI_OpenCL::init() {
+    if(isInitialised) return;
+
+    cl_int status = CL_SUCCESS;
+
+    mContext = cl::Context(CL_DEVICE_TYPE_GPU, nullptr, nullptr, nullptr, &status);
+    svp::verifyOpenCL_Status(status);
+
+    auto devices = mContext.getInfo<CL_CONTEXT_DEVICES>(&status);
+    svp::verifyOpenCL_Status(status);
+    mDevice = devices.front();
+
+    cl::Program program(
+        mContext,
+        svp::readScript("ImageScaling.cl"),
+        false,
+        &status
+    );
+    svp::verifyOpenCL_Status(status);
+    svp::verifyOpenCL_Status(program.build("-cl-std=CL1.2"));
+    mKernel = cl::Kernel(program, "nearestNeighbourInterpolation", &status);
+    svp::verifyOpenCL_Status(status);
+
+    mCommandQueue = cl::CommandQueue(mContext, mDevice, 0, &status);
+    svp::verifyOpenCL_Status(status);
+
+    isInitialised = true;
+}
+
+cv::Mat svp::NNI_OpenCL::transform(const cv::Mat &image, float scaleX, float scaleY) {
+    cl_int status;
+    cv::Mat scaledImage(std::round(image.rows * scaleY), std::round(image.cols * scaleX), CV_8UC(image.channels()));
+
+    size_t srcImageSize = image.channels() * sizeof(uint8_t) * image.rows * image.cols;
+    cl::Buffer srcImageBuffer(
+        mContext,
+        CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+        srcImageSize,
+        image.data,
+        &status
+    );
+    verifyOpenCL_Status(status);
+
+    size_t scaledImageSize = scaledImage.channels() * sizeof(uint8_t) * scaledImage.rows * scaledImage.cols;
+    cl::Buffer scaledImageBuffer(
+        mContext,
+        CL_MEM_WRITE_ONLY,
+        scaledImageSize,
+        nullptr,
+        &status
+    );
+    verifyOpenCL_Status(status);
+
+    verifyOpenCL_Status(mKernel.setArg(0, srcImageBuffer));
+    verifyOpenCL_Status(mKernel.setArg(1, cl_uint(image.step1())));
+    verifyOpenCL_Status(mKernel.setArg(2, scaledImageBuffer));
+    verifyOpenCL_Status(mKernel.setArg(3, cl_uint(scaledImage.step1())));
+    verifyOpenCL_Status(mKernel.setArg(4, cl_uint(image.channels())));
+    verifyOpenCL_Status(mKernel.setArg(5, cl_float(scaleX)));
+    verifyOpenCL_Status(mKernel.setArg(6, cl_float(scaleY)));
+
+    verifyOpenCL_Status(mCommandQueue.enqueueNDRangeKernel(mKernel, cl::NullRange, cl::NDRange(scaledImage.rows, scaledImage.cols), cl::NDRange(1, 1)));
+    verifyOpenCL_Status(mCommandQueue.enqueueReadBuffer(scaledImageBuffer, CL_TRUE, 0, scaledImageSize, scaledImage.data));
+
+    return scaledImage;
+}
+
+std::string svp::NNI_OpenCL::toString() {
+    return "Scaling image using Nearest Neighbour Interpolation using OpenCL";
 }
 
 svp::ImageScalingBenchMarker::ImageScalingBenchMarker(std::unique_ptr<ImageScalingStrategy> pImageScalingStrategy)

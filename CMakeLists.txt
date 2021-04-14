@@ -77,6 +77,8 @@ add_executable(ImageProcessing
 )
 target_link_libraries(ImageProcessing
     PUBLIC
+        OpenCL
         ${OpenCV_LIBS}
+        Utility
 )
 add_dependencies(ImageProcessing CopyScripts)

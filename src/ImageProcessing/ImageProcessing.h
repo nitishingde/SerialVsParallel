@@ -2,6 +2,7 @@
 #define SERIALVSPARALLEL_IMAGEPROCESSING_H
 
 
+#include <CL/cl.hpp>
 #include <opencv2/opencv.hpp>
 
 namespace svp {
@@ -13,6 +14,22 @@ namespace svp {
 
     class NNI_Serial: public ImageScalingStrategy {
     public:
+        cv::Mat transform(const cv::Mat &image, float scaleX, float scaleY) override;
+        std::string toString() override;
+    };
+
+    class NNI_OpenCL: public ImageScalingStrategy {
+    private:
+        bool isInitialised = false;
+        cl::Context mContext;
+        cl::Device mDevice;
+        cl::Kernel mKernel;
+        cl::CommandQueue mCommandQueue;
+
+    private:
+        void init();
+    public:
+        explicit NNI_OpenCL();
         cv::Mat transform(const cv::Mat &image, float scaleX, float scaleY) override;
         std::string toString() override;
     };
