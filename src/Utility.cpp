@@ -117,6 +117,7 @@ void svp::printOpenCL_DeviceInfo(const cl::Device &device) {
     printf("Device Local Memory Size/Compute Unit        : %u\n", device.getInfo<CL_DEVICE_LOCAL_MEM_SIZE_PER_COMPUTE_UNIT_AMD>());
 
     printf("Device Extensions support                    : %s\n", device.getInfo<CL_DEVICE_EXTENSIONS>().c_str());
+    printf("Device Max Clock Frequency                   : %d Hz\n", device.getInfo<CL_DEVICE_MAX_CLOCK_FREQUENCY>());
     printf("\n");
 }
 
