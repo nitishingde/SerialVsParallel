@@ -17,3 +17,21 @@ __kernel void nearestNeighbourInterpolation(
         scaledImage[scaledImageOffset + channel] = image[imageOffset + channel];
     }
 }
+
+__constant sampler_t nnSampler =    CLK_NORMALIZED_COORDS_FALSE |
+                                    CLK_ADDRESS_NONE |
+                                    CLK_FILTER_NEAREST;
+
+__kernel void nearestNeighbourInterpolation2(
+    __read_only image2d_t image,
+    __write_only image2d_t scaledImage,
+    const float imageScaleX,
+    const float imageScaleY
+) {
+    // column major indexing
+    int2 scaledImageCoord = (int2)(get_global_id(1), get_global_id(0));
+    int2 imageCoord = (int2)(scaledImageCoord.x/imageScaleX, scaledImageCoord.y/imageScaleY);
+
+    uint4 pixel = read_imageui(image, nnSampler, imageCoord);
+    write_imageui(scaledImage, scaledImageCoord, pixel);
+}

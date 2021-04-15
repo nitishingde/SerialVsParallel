@@ -101,6 +101,100 @@ std::string svp::NNI_OpenCL::toString() {
     return "Scaling image using Nearest Neighbour Interpolation using OpenCL";
 }
 
+void svp::NNI_OpenCL2::init() {
+    if(isInitialised) return;
+
+    cl_int status = CL_SUCCESS;
+
+    mContext = cl::Context(CL_DEVICE_TYPE_GPU, nullptr, nullptr, nullptr, &status);
+    svp::verifyOpenCL_Status(status);
+
+    auto devices = mContext.getInfo<CL_CONTEXT_DEVICES>(&status);
+    svp::verifyOpenCL_Status(status);
+    mDevice = devices.front();
+
+    cl::Program program(
+        mContext,
+        svp::readScript("ImageScaling.cl"),
+        false,
+        &status
+    );
+    svp::verifyOpenCL_Status(status);
+    svp::verifyOpenCL_Status(program.build("-cl-std=CL1.2"));
+    mKernel = cl::Kernel(program, "nearestNeighbourInterpolation2", &status);
+    svp::verifyOpenCL_Status(status);
+
+    mCommandQueue = cl::CommandQueue(mContext, mDevice, 0, &status);
+    svp::verifyOpenCL_Status(status);
+
+    isInitialised = true;
+}
+
+svp::NNI_OpenCL2::NNI_OpenCL2() {
+    init();
+}
+
+cv::Mat svp::NNI_OpenCL2::transform(const cv::Mat &image, float scaleX, float scaleY) {
+    cl_int status;
+    cv::Mat scaledImage(std::round(image.rows * scaleY), std::round(image.cols * scaleX), CV_8UC(image.channels()));
+
+    cl::ImageFormat imageFormat(CL_RGBA, CL_UNSIGNED_INT8);
+
+    cl::Image2D srcImage2D(
+        mContext,
+        CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+        imageFormat,
+        image.cols,
+        image.rows,
+        0,
+        image.data,
+        &status
+    );
+    verifyOpenCL_Status(status);
+
+    cl::Image2D scaledImage2D(
+        mContext,
+        CL_MEM_WRITE_ONLY,
+        imageFormat,
+        scaledImage.cols,
+        scaledImage.rows,
+        0,
+        nullptr,
+        &status
+    );
+    verifyOpenCL_Status(status);
+
+    verifyOpenCL_Status(mKernel.setArg(0, srcImage2D));
+    verifyOpenCL_Status(mKernel.setArg(1, scaledImage2D));
+    verifyOpenCL_Status(mKernel.setArg(2, cl_float(scaleX)));
+    verifyOpenCL_Status(mKernel.setArg(3, cl_float(scaleY)));
+
+    verifyOpenCL_Status(mCommandQueue.enqueueNDRangeKernel(
+        mKernel,
+        cl::NullRange,
+        cl::NDRange(scaledImage.rows, scaledImage.cols),
+        cl::NDRange(1, 1)
+    ));
+
+    cl::size_t<3> region;
+    region[0] = scaledImage.cols, region[1] = scaledImage.rows, region[2] = 1;
+    verifyOpenCL_Status(mCommandQueue.enqueueReadImage(
+        scaledImage2D,
+        CL_TRUE,
+        cl::size_t<3>(),
+        region,
+        scaledImage.step1(),
+        0,
+        scaledImage.data
+    ));
+
+    return scaledImage;
+}
+
+std::string svp::NNI_OpenCL2::toString() {
+    return "Scaling image using Nearest Neighbour Interpolation using OpenCL with inbuilt image functionality";
+}
+
 svp::ImageScalingBenchMarker::ImageScalingBenchMarker(std::unique_ptr<ImageScalingStrategy> pImageScalingStrategy)
     : mpImageScalingStrategy(std::move(pImageScalingStrategy)) {
 }

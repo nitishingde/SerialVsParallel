@@ -34,6 +34,22 @@ namespace svp {
         std::string toString() override;
     };
 
+    class NNI_OpenCL2: public ImageScalingStrategy {
+    private:
+        bool isInitialised = false;
+        cl::Context mContext;
+        cl::Device mDevice;
+        cl::Kernel mKernel;
+        cl::CommandQueue mCommandQueue;
+
+    private:
+        void init();
+    public:
+        explicit NNI_OpenCL2();
+        cv::Mat transform(const cv::Mat &image, float scaleX, float scaleY) override;
+        std::string toString() override;
+    };
+
     class ImageScalingBenchMarker {
     private:
         std::unique_ptr<ImageScalingStrategy> mpImageScalingStrategy = nullptr;
