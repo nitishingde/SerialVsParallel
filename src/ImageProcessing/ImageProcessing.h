@@ -6,6 +6,8 @@
 #include <opencv2/opencv.hpp>
 
 namespace svp {
+    bool cmp(const cv::Mat &image1, const cv::Mat &image2);
+
     class ImageScalingStrategy {
     public:
         virtual cv::Mat transform(const cv::Mat &image, float scaleX, float scaleY) = 0;

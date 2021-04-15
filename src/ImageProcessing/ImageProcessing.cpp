@@ -3,6 +3,15 @@
 #include <chrono>
 #include <numeric>
 
+bool svp::cmp(const cv::Mat &image1, const cv::Mat &image2) {
+    return
+        image1.rows == image2.rows
+        and image1.cols == image2.cols
+        and image1.channels() == image2.channels()
+        and std::equal(image1.begin<uint8_t>(), image1.end<uint8_t>(), image2.begin<uint8_t>())
+        ;
+}
+
 cv::Mat svp::NNI_Serial::transform(const cv::Mat &image, float scaleX, float scaleY) {
     auto channelSize = image.channels();
     cv::Mat scaledImage(std::round(image.rows * scaleY), std::round(image.cols * scaleX), CV_8UC(channelSize));
@@ -217,7 +226,7 @@ void svp::ImageScalingBenchMarker::benchmarkImageScaling(uint32_t iterations, co
         auto end = std::chrono::high_resolution_clock::now();
         executionTime[iteration] = std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count()/1.e9;
 #if not NDEBUG
-        if(!std::equal(expectedResult.begin<uint8_t>(), expectedResult.end<uint8_t>(), scaledImage.begin<uint8_t>())) {
+        if(!cmp(scaledImage, expectedResult)) {
             return;
         }
         printf("[Debug] Execution Time for iteration (%u, %u): %0.9gs\n", iteration+1, iterations, executionTime[iteration]);
