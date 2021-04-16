@@ -15,16 +15,10 @@ bool svp::cmp(const cv::Mat &image1, const cv::Mat &image2) {
 cv::Mat svp::NNI_Serial::transform(const cv::Mat &image, float scaleX, float scaleY) {
     auto channelSize = image.channels();
     cv::Mat scaledImage(std::round(image.rows * scaleY), std::round(image.cols * scaleX), CV_8UC(channelSize));
-    for(size_t scaledI = 0; scaledI < scaledImage.rows; ++scaledI) {
-        for(size_t scaledJ = 0; scaledJ < scaledImage.cols; ++scaledJ) {
-            size_t scaledImageOffset = scaledI*scaledImage.step1() + scaledJ*channelSize;
-
-            size_t i = scaledI / scaleY, j = scaledJ / scaleX;
-            size_t imageOffset = i*image.step1() + j*channelSize;
-
-            for(size_t channel = 0; channel < channelSize; ++channel) {
-                scaledImage.data[scaledImageOffset + channel] = image.data[imageOffset + channel];
-            }
+    for(int32_t scaledI = 0; scaledI < scaledImage.rows; ++scaledI) {
+        for(int32_t scaledJ = 0; scaledJ < scaledImage.cols; ++scaledJ) {
+            //4 "8-bit" channels -> 32 bits
+            scaledImage.at<uint32_t>(scaledI, scaledJ) = image.at<uint32_t>(scaledI/scaleY, scaledJ/scaleX);
         }
     }
 
