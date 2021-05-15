@@ -15,6 +15,7 @@ namespace svp {
     protected:
         static bool verifyMatrices(const Matrix &matrix1, const Matrix &matrix2, const Matrix &result);
     public:
+        virtual ~DotProductStrategy() = default;
         virtual void calculateDotProduct(const Matrix &matrix1, const Matrix &matrix2, Matrix &result) = 0;
         virtual std::string toString() = 0;
     };
@@ -46,16 +47,6 @@ namespace svp {
         explicit OpenCL_DotProductStrategy();
         void calculateDotProduct(const Matrix &matrix1, const Matrix &matrix2, Matrix &result) override;
         std::string toString() override;
-    };
-
-    class DotProductBenchMarker {
-    private:
-        std::unique_ptr<DotProductStrategy> mpDotProductStrategy = nullptr;
-
-    public:
-        explicit DotProductBenchMarker(std::unique_ptr<DotProductStrategy> pDotProductStrategy = nullptr);
-        void setDotProductStrategy(std::unique_ptr<DotProductStrategy> pDotProductStrategy);
-        void benchmarkCalculateDotProduct(uint32_t iterations, const Matrix &matrix1, const Matrix &matrix2, const Matrix &expectedResult) const;
     };
 }
 
