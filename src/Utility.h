@@ -61,6 +61,13 @@ namespace svp {
     bool isMpiRootPid();
 }
 
+#define printf(...) if(svp::isMpiRootPid()) printf(__VA_ARGS__)
+#if NDEBUG
+    #define dprintf(...) printf(__VA_ARGS__)
+#else
+    #define dprintf(...) fprintf(stdout, __VA_ARGS__)
+#endif
+
 #define SVP_PROFILING 1
 #if SVP_PROFILING
     #define SVP_START_BENCHMARKING_SESSION(name, iterations)                                                        \
