@@ -1,7 +1,100 @@
 #include "Utility.h"
+#include <algorithm>
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <mpi/mpi.h>
+#include <numeric>
+#include <unordered_map>
+
+namespace svp {
+    struct ProfileResult {
+        std::string name;
+        double elapsedTime;
+    };
+
+    class Profiler {
+    private:
+        Profiler() = default;
+        std::unordered_map<std::string, std::vector<double>> mExecutions;
+        std::string mSession;
+
+    private:
+        void flush();
+    public:
+        ~Profiler();
+        static Profiler *getInstance();
+        void startSession(const char *pSession);
+        void endSession();
+        void log(const ProfileResult &profileResult);
+    };
+}
+
+static svp::Profiler *pInstance = nullptr;
+
+svp::Profiler::~Profiler() {
+    endSession();
+}
+
+svp::Profiler* svp::Profiler::getInstance() {
+    if(pInstance == nullptr) {
+        pInstance = new Profiler();
+    }
+    return pInstance;
+}
+
+void svp::Profiler::flush() {
+    printf("> Session         : %s\n", mSession.c_str());
+    for(const auto &it: mExecutions) {
+        auto &executionTime = it.second;
+        printf("> Function        : %s\n", it.first.c_str());
+        printf("> Iterations      : %zu\n", executionTime.size());
+        printf("Avg Execution Time: %.9gs\n", std::accumulate(executionTime.begin(), executionTime.end(), 0.0)/executionTime.size());
+        printf("Min Execution Time: %.9gs\n", *std::min_element(executionTime.begin(), executionTime.end()));
+        printf("Max Execution Time: %.9gs\n", *std::max_element(executionTime.begin(), executionTime.end()));
+    }
+    printf("\n");
+}
+
+void svp::Profiler::startSession(const char *pSession) {
+    if(!mSession.empty() and mSession != pSession) endSession();
+    mSession = pSession;
+}
+
+void svp::Profiler::endSession() {
+    flush();
+    mSession.clear();
+    mExecutions.clear();
+}
+
+void svp::Profiler::log(const ProfileResult &profileResult) {
+    if(auto it = mExecutions.find(profileResult.name); it != mExecutions.end()) {
+        it->second.emplace_back(profileResult.elapsedTime);
+    } else {
+        mExecutions[profileResult.name] = {profileResult.elapsedTime};
+    }
+}
+
+svp::BenchMarker::BenchMarker(const char *pName) {
+    Profiler::getInstance()->startSession(pName);
+}
+
+svp::BenchMarker::~BenchMarker() {
+    Profiler::getInstance()->endSession();
+}
+
+svp::Timer::Timer(const char *pName)
+    : mName(pName)
+    , mStartPoint(std::chrono::high_resolution_clock::now()) {
+}
+
+svp::Timer::~Timer() {
+    auto endPoint = std::chrono::high_resolution_clock::now();
+    Profiler::getInstance()->log(ProfileResult {
+        .name = mName,
+        .elapsedTime = double(std::chrono::duration_cast<std::chrono::nanoseconds>(endPoint - mStartPoint).count()) / 1.e9
+    });
+}
 
 svp::OpenCL_Exception::OpenCL_Exception(cl_int error) {
     mErrorMessage = "[Error] Code, Msg = (" + std::to_string(error) + ", " + svp::getOpenCL_ErrorMessage(error) + ")";
