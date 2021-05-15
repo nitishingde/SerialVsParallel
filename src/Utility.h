@@ -80,5 +80,6 @@ namespace svp {
     #define SVP_PROFILE_FUNC()
 #endif
 
+#define VALGRIND_ON 0
 
 #endif //TRYOPENCL_UTILITY_H

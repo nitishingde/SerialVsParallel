@@ -225,26 +225,31 @@ void svp::printOpenCL_KernelWorkGroupInfo(const cl::Kernel &kernel, const cl::De
 }
 
 svp::MPI_GlobalLockGuard::MPI_GlobalLockGuard(int32_t argc, char **argv) {
+#if not VALGRIND_ON
     int32_t flag = false;
     if(auto status = MPI_Initialized(&flag); status != MPI_SUCCESS or flag == false) {
         if(MPI_Init(&argc, &argv) == MPI_SUCCESS) {
             if(svp::isMpiRootPid()) printf("[MPI_GlobalLockGuard] MPI initialized\n\n");
         }
     }
+#endif
 }
 
 svp::MPI_GlobalLockGuard::~MPI_GlobalLockGuard() {
+#if not VALGRIND_ON
     int32_t flag = false;
     if(auto status = MPI_Initialized(&flag); status == MPI_SUCCESS and flag) {
         if(MPI_Finalize() == MPI_SUCCESS) {
             if(svp::isMpiRootPid()) printf("[MPI_GlobalLockGuard] MPI exited\n\n");
         }
     }
+#endif
 }
 
 static int32_t sIsMpiRootPid = -1;
 
 bool svp::isMpiRootPid() {
+#if not VALGRIND_ON
     if(sIsMpiRootPid == -1) {
         int32_t flag = false;
         if(auto status = MPI_Initialized(&flag); status == MPI_SUCCESS and flag) {
@@ -254,4 +259,7 @@ bool svp::isMpiRootPid() {
         }
     }
     return (sIsMpiRootPid == -1) or sIsMpiRootPid;
+#else
+    return true;
+#endif
 }
