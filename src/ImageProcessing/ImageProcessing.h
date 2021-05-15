@@ -10,6 +10,7 @@ namespace svp {
 
     class ImageScalingStrategy {
     public:
+        virtual ~ImageScalingStrategy() = default;
         virtual cv::Mat transform(const cv::Mat &image, float scaleX, float scaleY) = 0;
         virtual std::string toString() = 0;
     };
@@ -50,16 +51,6 @@ namespace svp {
         explicit NNI_OpenCL2();
         cv::Mat transform(const cv::Mat &image, float scaleX, float scaleY) override;
         std::string toString() override;
-    };
-
-    class ImageScalingBenchMarker {
-    private:
-        std::unique_ptr<ImageScalingStrategy> mpImageScalingStrategy = nullptr;
-
-    public:
-        explicit ImageScalingBenchMarker(std::unique_ptr<ImageScalingStrategy> pImageScalingStrategy = nullptr);
-        void setImageScalingStrategy(std::unique_ptr<ImageScalingStrategy> pImageScalingStrategy);
-        void benchmarkImageScaling(uint32_t iterations, const cv::Mat &image, float scaleX, float scaleY, const cv::Mat &expectedResult) const;
     };
 }
 

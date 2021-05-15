@@ -13,6 +13,8 @@ bool svp::cmp(const cv::Mat &image1, const cv::Mat &image2) {
 }
 
 cv::Mat svp::NNI_Serial::transform(const cv::Mat &image, float scaleX, float scaleY) {
+    SVP_PROFILE_FUNC();
+
     auto channelSize = image.channels();
     cv::Mat scaledImage(std::round(image.rows * scaleY), std::round(image.cols * scaleX), CV_8UC(channelSize));
     for(int32_t scaledI = 0; scaledI < scaledImage.rows; ++scaledI) {
@@ -63,6 +65,8 @@ void svp::NNI_OpenCL::init() {
 }
 
 cv::Mat svp::NNI_OpenCL::transform(const cv::Mat &image, float scaleX, float scaleY) {
+    SVP_PROFILE_FUNC();
+
     cl_int status;
     cv::Mat scaledImage(std::round(image.rows * scaleY), std::round(image.cols * scaleX), CV_8UC(image.channels()));
 
@@ -138,6 +142,8 @@ svp::NNI_OpenCL2::NNI_OpenCL2() {
 }
 
 cv::Mat svp::NNI_OpenCL2::transform(const cv::Mat &image, float scaleX, float scaleY) {
+    SVP_PROFILE_FUNC();
+
     cl_int status;
     cv::Mat scaledImage(std::round(image.rows * scaleY), std::round(image.cols * scaleX), CV_8UC(image.channels()));
 
@@ -196,43 +202,4 @@ cv::Mat svp::NNI_OpenCL2::transform(const cv::Mat &image, float scaleX, float sc
 
 std::string svp::NNI_OpenCL2::toString() {
     return "Scaling image using Nearest Neighbour Interpolation using OpenCL with inbuilt image functionality";
-}
-
-svp::ImageScalingBenchMarker::ImageScalingBenchMarker(std::unique_ptr<ImageScalingStrategy> pImageScalingStrategy)
-    : mpImageScalingStrategy(std::move(pImageScalingStrategy)) {
-}
-
-void svp::ImageScalingBenchMarker::setImageScalingStrategy(std::unique_ptr<ImageScalingStrategy> pImageScalingStrategy) {
-    mpImageScalingStrategy = std::move(pImageScalingStrategy);
-}
-
-void svp::ImageScalingBenchMarker::benchmarkImageScaling(uint32_t iterations, const cv::Mat &image, float scaleX, float scaleY, const cv::Mat &expectedResult) const {
-    std::vector<double> executionTime(iterations, 0.0);
-
-    for(uint32_t iteration = 0; iteration < executionTime.size(); ++iteration) {
-#if NDEBUG
-        printf("\rIteration: %u/%u", iteration+1, iterations);
-        fflush(stdout);
-#endif
-
-        auto start = std::chrono::high_resolution_clock::now();
-        auto scaledImage = mpImageScalingStrategy->transform(image, scaleX, scaleY);
-        auto end = std::chrono::high_resolution_clock::now();
-        executionTime[iteration] = std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count()/1.e9;
-#if not NDEBUG
-        if(!cmp(scaledImage, expectedResult)) {
-            return;
-        }
-        printf("[Debug] Execution Time for iteration (%u, %u): %0.9gs\n", iteration+1, iterations, executionTime[iteration]);
-#endif
-    }
-
-    printf("\r");
-    printf("> Strategy        : %s\n", mpImageScalingStrategy->toString().c_str());
-    printf("> Iterations      : %u\n", iterations);
-    printf("> ~Loops/iteration: %g\n", double(expectedResult.total())*double(expectedResult.channels()));
-    printf("Avg Execution Time: %.9gs\n", std::accumulate(executionTime.begin(), executionTime.end(), 0.0)/executionTime.size());
-    printf("Min Execution Time: %.9gs\n", *std::min_element(executionTime.begin(), executionTime.end()));
-    printf("Max Execution Time: %.9gs\n", *std::max_element(executionTime.begin(), executionTime.end()));
-    printf("\n");
 }
