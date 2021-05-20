@@ -26,7 +26,7 @@ void hello_world() {
     svp::verifyOpenCL_Status(kernel.setArg(0, memBuf));
     svp::printOpenCL_KernelWorkGroupInfo(kernel, device);
 
-    cl::CommandQueue queue(context, device, 0 &status);
+    cl::CommandQueue queue(context, device, 0, &status);
     svp::verifyOpenCL_Status(status);
 
     // try commenting the writeBuffer line below, observe how it behaves
