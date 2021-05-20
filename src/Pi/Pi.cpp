@@ -154,7 +154,7 @@ void svp::OpenCL_PiStrategy::init() {
 
     cl::Program program(
         mContext,
-        std::regex_replace(svp::readScript("Pi.cl"), std::regex("%workGroupSize%"), std::to_string(mWorkGroupSize)),
+        std::regex_replace(svp::readScript("resources/Pi.cl"), std::regex("%workGroupSize%"), std::to_string(mWorkGroupSize)),
         false,
         &status
     );

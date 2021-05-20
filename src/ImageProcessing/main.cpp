@@ -3,7 +3,7 @@
 #include "../Utility.h"
 
 int main(int argc, char **argv) {
-    auto image = cv::imread("2048x1024.png", cv::ImreadModes::IMREAD_UNCHANGED);
+    auto image = cv::imread("resources/2048x1024.png", cv::ImreadModes::IMREAD_UNCHANGED);
     if(image.channels() == 3) {
         cv::cvtColor(image, image, cv::ColorConversionCodes::COLOR_BGR2BGRA);
     }

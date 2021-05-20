@@ -78,7 +78,7 @@ void svp::OpenCL_DotProductStrategy::init() {
 
     cl::Program program(
         mContext,
-        svp::readScript("MatrixMultiplication.cl"),
+        svp::readScript("resources/MatrixMultiplication.cl"),
         false,
         &status
     );

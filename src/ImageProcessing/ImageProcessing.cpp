@@ -49,7 +49,7 @@ void svp::NNI_OpenCL::init() {
 
     cl::Program program(
         mContext,
-        svp::readScript("ImageScaling.cl"),
+        svp::readScript("resources/ImageScaling.cl"),
         false,
         &status
     );
@@ -122,7 +122,7 @@ void svp::NNI_OpenCL2::init() {
 
     cl::Program program(
         mContext,
-        svp::readScript("ImageScaling.cl"),
+        svp::readScript("resources/ImageScaling.cl"),
         false,
         &status
     );

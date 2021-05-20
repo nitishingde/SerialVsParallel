@@ -12,7 +12,7 @@ void hello_world() {
     auto device = devices.front();
     svp::printOpenCL_DeviceInfo(device);
 
-    cl::Program program(context, svp::readScript("HelloWorld.cl"), false, &status);
+    cl::Program program(context, svp::readScript("resources/HelloWorld.cl"), false, &status);
     svp::verifyOpenCL_Status(status);
     status = program.build("-cl-std=CL1.2");
     svp::verifyOpenCL_Status(status);
@@ -62,7 +62,7 @@ void visualise_execution_model() {
     cl::Buffer matrixMem(context, CL_MEM_HOST_READ_ONLY|CL_MEM_WRITE_ONLY, sizeof(matrix), nullptr, &status);
     svp::verifyOpenCL_Status(status);
 
-    cl::Program program(context, svp::readScript("VisualiseExecutionModel.cl"), false, &status);
+    cl::Program program(context, svp::readScript("resources/VisualiseExecutionModel.cl"), false, &status);
     svp::verifyOpenCL_Status(status);
     svp::verifyOpenCL_Status(program.build("-cl-std=CL1.2"));
 
