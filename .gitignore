@@ -36,3 +36,6 @@
 .idea/
 .vscode/
 build/
+
+# Large database files in resources
+resources/*.mtx*
