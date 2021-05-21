@@ -89,6 +89,7 @@ add_executable(Graph
 )
 target_link_libraries(Graph
     PUBLIC
+        OpenMP::OpenMP_CXX
         Utility
 )
 add_dependencies(Graph CopyScripts)

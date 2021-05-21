@@ -40,23 +40,23 @@ int main(int argc, char **argv) {
 
     for(const auto &pStrategy: {
         std::shared_ptr<svp::BfsStrategy>(new svp::SerialBfsStrategy()),
+        std::shared_ptr<svp::BfsStrategy>(new svp::OpenMP_BfsStrategy()),
     }) {
-        std::vector<int32_t> distance;
         SVP_START_BENCHMARKING_SESSION(pStrategy->toString().c_str(), 10) {
             SVP_PRINT_BENCHMARKING_ITERATION();
-            distance = pStrategy->search(graph, sourceNode);
-        }
+            auto distance = pStrategy->search(graph, sourceNode);
 #if not NDEBUG
-        if(check != distance) {
-            printf("[Debug] Failed!\n");
-            return -1;
-        }
+            if(check != distance) {
+                fprintf(stderr, "[Debug] Failed!\n");
+                return -1;
+            }
 #else
-        if(distance.empty() or distance.size() < sourceNode or distance[sourceNode] != 0) {
-            printf("[Debug] Failed!\n");
-            return -1;
-        }
+            if(distance.empty() or distance.size() < sourceNode or distance[sourceNode] != 0) {
+                fprintf(stderr, "[Debug] Failed!\n");
+                return -1;
+            }
 #endif
+        }
     }
 
     return 0;

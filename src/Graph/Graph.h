@@ -19,6 +19,12 @@ namespace svp {
         std::vector<int32_t> search(const std::vector<std::vector<int32_t>> &graph, int32_t sourceNode) override;
         std::string toString() override;
     };
+
+    class OpenMP_BfsStrategy: public BfsStrategy {
+    public:
+        std::vector<int32_t> search(const std::vector<std::vector<int32_t>> &graph, int32_t sourceNode) override;
+        std::string toString() override;
+    };
 }
 
 #endif //SERIALVSPARALLEL_GRAPH_H
