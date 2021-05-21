@@ -7,6 +7,7 @@ std::vector<int32_t> svp::SerialBfsStrategy::search(const std::vector<std::vecto
     std::vector<int32_t> frontier;
     frontier.emplace_back(sourceNode);
     std::vector<int32_t> distances(graph.size(), -1);
+    distances[sourceNode] = 0;
 
     for(int32_t distance = 1; !frontier.empty(); ++distance) {
         std::vector<int32_t> queue;
