@@ -20,12 +20,13 @@ namespace svp {
         std::string mSession;
 
     private:
-        void flush();
+        void flush() const;
     public:
         ~Profiler();
         static Profiler *getInstance();
         void startSession(const char *pSession);
         void endSession();
+        bool isSessionActive() const;
         void log(const ProfileResult &profileResult);
     };
 }
@@ -43,7 +44,7 @@ svp::Profiler* svp::Profiler::getInstance() {
     return pInstance;
 }
 
-void svp::Profiler::flush() {
+void svp::Profiler::flush() const {
     printf("> Session         : %s\n", mSession.c_str());
     for(const auto &it: mExecutions) {
         auto &executionTime = it.second;
@@ -67,7 +68,12 @@ void svp::Profiler::endSession() {
     mExecutions.clear();
 }
 
+bool svp::Profiler::isSessionActive() const {
+    return !mSession.empty();
+}
+
 void svp::Profiler::log(const ProfileResult &profileResult) {
+    if(!isSessionActive()) return;
     if(auto it = mExecutions.find(profileResult.name); it != mExecutions.end()) {
         it->second.emplace_back(profileResult.elapsedTime);
     } else {
