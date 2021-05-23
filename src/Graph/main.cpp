@@ -4,21 +4,28 @@
 #include "Graph.h"
 #include "../Utility.h"
 
-std::vector<std::vector<int32_t>> readsAdjacencyList(const char *pFileName) {
+svp::CsrGraph getCsrGraph(const char *pFileName) {
     int32_t N;
     std::ifstream input(pFileName);
     input >> N;
     input.get();
-    std::vector<std::vector<int32_t>> adjacencyList(N);
+
+    svp::CsrGraph graph;
+    auto &csr = graph.compressedSparseRows;
+    csr.resize(N+1);
+    csr[0] = 0;
+    auto &edgeList = graph.edgeList;
+
     for(int32_t n = 0; !input.eof() and n < N; ++n) {
         for(int32_t vertex; input.peek() != '\n';) {
             input >> vertex;
-            adjacencyList[n].emplace_back(vertex);
+            edgeList.emplace_back(vertex);
         }
+        csr[n+1] = graph.edgeList.size();
         input.get();
     }
 
-    return adjacencyList;
+    return graph;
 }
 
 std::vector<int32_t> readAnswer(const char *pFileName) {
@@ -32,7 +39,7 @@ std::vector<int32_t> readAnswer(const char *pFileName) {
 }
 
 int main(int argc, char **argv) {
-    auto graph = readsAdjacencyList("resources/hugetrace-00010.mtx.adj");
+    auto graph = getCsrGraph("resources/hugetrace-00010.mtx.adj");
     auto sourceNode = 0;
 #if not NDEBUG
     auto check = readAnswer("resources/hugetrace-00010.mtx.ans0");
