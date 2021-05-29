@@ -80,39 +80,11 @@ std::string svp::OpenMP_BfsStrategy::toString() {
 }
 
 void svp::OpenCL_BfsStrategy::init() {
-    if(mIsInitialised) return;
-
+    OpenCL_Base::init();
     cl_int status = CL_SUCCESS;
-
-    mContext = cl::Context(CL_DEVICE_TYPE_GPU, nullptr, nullptr, nullptr, &status);
+    loadProgram("resources/Bfs.cl");
+    mKernel = cl::Kernel(mProgram, "bfsSearch", &status);
     svp::verifyOpenCL_Status(status);
-
-    auto devices = mContext.getInfo<CL_CONTEXT_DEVICES>(&status);
-    svp::verifyOpenCL_Status(status);
-    mDevice = devices.front();
-
-    // 512 on my machine
-    mWorkGroupSize = mDevice.getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>(&status);
-    svp::verifyOpenCL_Status(status);
-#if not NDEBUG
-    printf("[DEBUG] Work Group size: %zu\n", mWorkGroupSize);
-#endif
-
-    cl::Program program(
-        mContext,
-        svp::readScript("resources/Bfs.cl"),
-        false,
-        &status
-    );
-    svp::verifyOpenCL_Status(status);
-    svp::verifyOpenCL_Status(program.build("-cl-std=CL1.2"));
-    mKernel = cl::Kernel(program, "bfsSearch", &status);
-    svp::verifyOpenCL_Status(status);
-
-    mCommandQueue = cl::CommandQueue(mContext, mDevice, 0, &status);
-    svp::verifyOpenCL_Status(status);
-
-    mIsInitialised = true;
 }
 
 svp::OpenCL_BfsStrategy::OpenCL_BfsStrategy() {

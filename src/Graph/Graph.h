@@ -37,8 +37,10 @@ namespace svp {
 
     class OpenCL_BfsStrategy: public BfsStrategy, private OpenCL_Base {
     private:
-        void init() override;
+        cl::Kernel mKernel;
 
+    private:
+        void init() override;
     public:
         OpenCL_BfsStrategy();
         std::vector<int32_t> search(const CsrGraph &graph, int32_t sourceNode) override;

@@ -110,6 +110,44 @@ const char* svp::OpenCL_Exception::what() const noexcept {
     return mErrorMessage.c_str();
 }
 
+void svp::OpenCL_Base::init() {
+    if(mIsInitialised) return;
+
+    cl_int status = CL_SUCCESS;
+
+    mContext = cl::Context(CL_DEVICE_TYPE_GPU, nullptr, nullptr, nullptr, &status);
+    svp::verifyOpenCL_Status(status);
+
+    auto devices = mContext.getInfo<CL_CONTEXT_DEVICES>(&status);
+    svp::verifyOpenCL_Status(status);
+    mDevice = devices.front();
+
+    // 512 on my machine
+    mWorkGroupSize = mDevice.getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>(&status);
+    svp::verifyOpenCL_Status(status);
+#if not NDEBUG
+    printf("[DEBUG] Work Group size: %zu\n", mWorkGroupSize);
+#endif
+
+    mCommandQueue = cl::CommandQueue(mContext, mDevice, 0, &status);
+    svp::verifyOpenCL_Status(status);
+
+    mIsInitialised = true;
+}
+
+void svp::OpenCL_Base::loadProgram(const char *pProgramFile) {
+    cl_int status = CL_SUCCESS;
+
+    mProgram = cl::Program(
+        mContext,
+        svp::readScript(pProgramFile),
+        false,
+        &status
+    );
+    svp::verifyOpenCL_Status(status);
+    svp::verifyOpenCL_Status(mProgram.build("-cl-std=CL1.2"));
+}
+
 std::string svp::readScript(const std::string &scriptFilePath) {
     std::ifstream scriptFile(scriptFilePath);
     return std::string(std::istreambuf_iterator<char>(scriptFile), (std::istreambuf_iterator<char>()));

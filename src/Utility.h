@@ -4,6 +4,7 @@
 
 #include <chrono>
 #include <CL/cl.hpp>
+#include <unordered_map>
 
 namespace svp {
     /**
@@ -41,11 +42,12 @@ namespace svp {
         size_t mWorkGroupSize {};
         cl::Context mContext;
         cl::Device mDevice;
-        cl::Kernel mKernel;
+        cl::Program mProgram;
         cl::CommandQueue mCommandQueue;
 
     protected:
-        virtual void init() = 0;
+        virtual void init();
+        void loadProgram(const char *pProgramFile);
     };
 
     std::string readScript(const std::string &scriptFilePath);
