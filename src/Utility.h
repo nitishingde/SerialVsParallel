@@ -35,6 +35,19 @@ namespace svp {
         [[nodiscard]] const char *what() const _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_USE_NOEXCEPT override;
     };
 
+    class OpenCL_Base {
+    protected:
+        bool mIsInitialised = false;
+        size_t mWorkGroupSize {};
+        cl::Context mContext;
+        cl::Device mDevice;
+        cl::Kernel mKernel;
+        cl::CommandQueue mCommandQueue;
+
+    protected:
+        virtual void init() = 0;
+    };
+
     std::string readScript(const std::string &scriptFilePath);
 
     std::string getOpenCL_ErrorMessage(cl_int error);

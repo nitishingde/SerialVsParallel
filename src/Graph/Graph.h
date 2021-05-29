@@ -5,11 +5,15 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include "../Utility.h"
 
 namespace svp {
     struct CsrGraph {
         std::vector<uint32_t> edgeList;
         std::vector<uint32_t> compressedSparseRows;
+        [[nodiscard]] size_t getVertexCount() const {
+            return compressedSparseRows.size()-1;
+        }
     };
 
     class BfsStrategy {
@@ -27,6 +31,16 @@ namespace svp {
 
     class OpenMP_BfsStrategy: public BfsStrategy {
     public:
+        std::vector<int32_t> search(const CsrGraph &graph, int32_t sourceNode) override;
+        std::string toString() override;
+    };
+
+    class OpenCL_BfsStrategy: public BfsStrategy, private OpenCL_Base {
+    private:
+        void init() override;
+
+    public:
+        OpenCL_BfsStrategy();
         std::vector<int32_t> search(const CsrGraph &graph, int32_t sourceNode) override;
         std::string toString() override;
     };

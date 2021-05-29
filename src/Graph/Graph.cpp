@@ -1,6 +1,6 @@
 #include <omp.h>
+#include <cmath>
 #include "Graph.h"
-#include "../Utility.h"
 
 std::vector<int32_t> svp::SerialBfsStrategy::search(const CsrGraph &graph, int32_t sourceNode) {
     SVP_PROFILE_FUNC();
@@ -77,4 +77,124 @@ std::vector<int32_t> svp::OpenMP_BfsStrategy::search(const CsrGraph &graph, int3
 
 std::string svp::OpenMP_BfsStrategy::toString() {
     return "Do a BFS using OpenMP code";
+}
+
+void svp::OpenCL_BfsStrategy::init() {
+    if(mIsInitialised) return;
+
+    cl_int status = CL_SUCCESS;
+
+    mContext = cl::Context(CL_DEVICE_TYPE_GPU, nullptr, nullptr, nullptr, &status);
+    svp::verifyOpenCL_Status(status);
+
+    auto devices = mContext.getInfo<CL_CONTEXT_DEVICES>(&status);
+    svp::verifyOpenCL_Status(status);
+    mDevice = devices.front();
+
+    // 512 on my machine
+    mWorkGroupSize = mDevice.getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>(&status);
+    svp::verifyOpenCL_Status(status);
+#if not NDEBUG
+    printf("[DEBUG] Work Group size: %zu\n", mWorkGroupSize);
+#endif
+
+    cl::Program program(
+        mContext,
+        svp::readScript("resources/Bfs.cl"),
+        false,
+        &status
+    );
+    svp::verifyOpenCL_Status(status);
+    svp::verifyOpenCL_Status(program.build("-cl-std=CL1.2"));
+    mKernel = cl::Kernel(program, "bfsSearch", &status);
+    svp::verifyOpenCL_Status(status);
+
+    mCommandQueue = cl::CommandQueue(mContext, mDevice, 0, &status);
+    svp::verifyOpenCL_Status(status);
+
+    mIsInitialised = true;
+}
+
+svp::OpenCL_BfsStrategy::OpenCL_BfsStrategy() {
+    init();
+}
+
+std::vector<int32_t> svp::OpenCL_BfsStrategy::search(const CsrGraph &graph, int32_t sourceNode) {
+    SVP_PROFILE_FUNC();
+
+    cl_int status = CL_SUCCESS;
+
+    auto &edgeList = graph.edgeList;
+    auto &csr = graph.compressedSparseRows;
+
+    cl::Buffer edgeListBuffer(
+        mContext,
+        CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+        edgeList.size() * sizeof(decltype(graph.edgeList)::value_type),
+        (void*)edgeList.data(),
+        &status
+    );
+    verifyOpenCL_Status(status);
+
+    cl::Buffer csrBuffer(
+        mContext,
+        CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+        csr.size() * sizeof(decltype(graph.compressedSparseRows)::value_type),
+        (void*)csr.data(),
+        &status
+    );
+    verifyOpenCL_Status(status);
+
+    std::vector<int32_t> distances(graph.getVertexCount(), -1);
+    distances[sourceNode] = 0;
+    cl::Buffer distanceBuffer(
+        mContext,
+        CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+        distances.size() * sizeof(decltype(distances)::value_type),
+        distances.data(),
+        &status
+    );
+    verifyOpenCL_Status(status);
+
+    int32_t frontierCount = 1;
+    cl::Buffer frontierCountBuffer(
+        mContext,
+        CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+        sizeof(int32_t),
+        &frontierCount,
+        &status
+    );
+    verifyOpenCL_Status(status);
+
+    verifyOpenCL_Status(mKernel.setArg(0, edgeListBuffer));
+    verifyOpenCL_Status(mKernel.setArg(1, csrBuffer));
+    verifyOpenCL_Status(mKernel.setArg(2, uint32_t(graph.getVertexCount())));
+    verifyOpenCL_Status(mKernel.setArg(3, distanceBuffer));
+    verifyOpenCL_Status(mKernel.setArg(4, frontierCountBuffer));
+
+    uint32_t globalWorkSize = mWorkGroupSize*((graph.getVertexCount()+mWorkGroupSize-1)/mWorkGroupSize);
+    for(int32_t level = 0; 0 < frontierCount; ++level) {
+        verifyOpenCL_Status(mKernel.setArg(5, int32_t(level)));
+        verifyOpenCL_Status(mCommandQueue.enqueueNDRangeKernel(
+            mKernel,
+            cl::NullRange,
+            cl::NDRange(globalWorkSize),
+            cl::NDRange(mWorkGroupSize)
+        ));
+        verifyOpenCL_Status(mCommandQueue.enqueueReadBuffer(frontierCountBuffer, CL_TRUE, 0, sizeof(int32_t), &frontierCount));
+    }
+
+    verifyOpenCL_Status(mCommandQueue.enqueueReadBuffer(
+        distanceBuffer,
+        CL_TRUE,
+        0,
+        distances.size() * sizeof(decltype(distances)::value_type),
+        distances.data()
+    ));
+
+    return distances;
+}
+
+std::string svp::OpenCL_BfsStrategy::toString() {
+    return "Do a BFS using OpenCL";
 }
