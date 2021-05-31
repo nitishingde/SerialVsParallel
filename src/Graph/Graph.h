@@ -10,6 +10,7 @@
 namespace svp {
     struct CsrGraph {
         std::vector<uint32_t> edgeList;
+        std::vector<float> weightList;
         std::vector<uint32_t> compressedSparseRows;
         [[nodiscard]] size_t getVertexCount() const {
             return compressedSparseRows.size()-1;

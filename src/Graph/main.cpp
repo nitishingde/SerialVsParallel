@@ -24,16 +24,20 @@ svp::CsrGraph getCsrGraph(const char *pFileName) {
         {0, 3, 8, 11, 15, 16, 17, 18, 20, 22, 23, 24}
     };
 #endif
-    int32_t N;
     std::ifstream input(pFileName);
+    std::string type;
+    input >> type;
+    bool isWeighted = type == "#weighted" ? true: false;
+
+    int32_t N;
     input >> N;
-    input.get();
 
     svp::CsrGraph graph;
     auto &csr = graph.compressedSparseRows;
     csr.resize(N+1);
     csr[0] = 0;
     auto &edgeList = graph.edgeList;
+    auto &weightList = graph.weightList;
 
     for(int32_t n = 0, edgeCount; !input.eof() and n < N; ++n) {
         input >> edgeCount;
@@ -42,6 +46,14 @@ svp::CsrGraph getCsrGraph(const char *pFileName) {
             edgeList.emplace_back(vertex);
         }
         csr[n+1] = graph.edgeList.size();
+
+        if(!isWeighted) continue;
+
+        float weight;
+        for(int32_t i = 0; i < edgeCount; ++i) {
+            input >> weight;
+            weightList.emplace_back(weight);
+        }
     }
 
     return graph;
@@ -61,15 +73,18 @@ std::vector<int32_t> readAnswer(const char *pFileName) {
 }
 
 int main(int argc, char **argv) {
-    auto graph = getCsrGraph("resources/wiki-Talk.mtx.adj");
-#if DEBUG_GRAPH
+    std::string file =
+//        "resources/ca2010.mtx";
+        "resources/cage13.mtx";
+//        "resources/wiki-Talk.mtx";
+    auto graph = getCsrGraph((file+".adj").c_str());
     auto sourceNode = 0;
-#else
-    auto sourceNode = 2;
-#endif
+    auto check = readAnswer((file+".ans"+std::to_string(sourceNode)).c_str());
 
 #if not NDEBUG
-    auto check = readAnswer(("resources/wiki-Talk.mtx.ans"+std::to_string(sourceNode)).c_str());
+    auto iterations = 1;
+#else
+    auto iterations = 10;
 #endif
 
     for(const auto &pStrategy: {
@@ -77,20 +92,13 @@ int main(int argc, char **argv) {
         std::shared_ptr<svp::BfsStrategy>(new svp::OpenMP_BfsStrategy()),
         std::shared_ptr<svp::BfsStrategy>(new svp::OpenCL_BfsStrategy()),
     }) {
-        SVP_START_BENCHMARKING_SESSION(pStrategy->toString().c_str(), 10) {
+        SVP_START_BENCHMARKING_SESSION(pStrategy->toString().c_str(), iterations) {
             SVP_PRINT_BENCHMARKING_ITERATION();
             auto distance = pStrategy->search(graph, sourceNode);
-#if not NDEBUG
             if(check != distance) {
                 fprintf(stderr, "[Debug] Failed!\n");
                 return -1;
             }
-#else
-            if(distance.empty() or distance.size() < sourceNode or distance[sourceNode] != 0) {
-                fprintf(stderr, "[Debug] Failed!\n");
-                return -1;
-            }
-#endif
         }
     }
 
