@@ -39,3 +39,6 @@ build/
 
 # Large database files in resources
 resources/*.mtx*
+resources/*.gz*
+resources/*.txt*
+resources/*.edgelist*
