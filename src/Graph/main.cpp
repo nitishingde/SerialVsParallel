@@ -114,9 +114,10 @@ void benchMarkDijkstra(const svp::CsrGraph &graph, const int32_t sourceNode, con
                 fprintf(stderr, "[Debug] Failed, wrong lineage");
                 return;
             }
-            for(uint32_t i = 0; i < result.distances.size(); ++i) {
-                if(0.001f < std::abs(check[i]-result.distances[i])) {
-                    fprintf(stderr, "[Debug] Failed! size = %zu, node = %u, expected = %f, calculated = %f\n", check.size(), i, check[i], result.distances[i]);
+            const auto &costs = result.costs;
+            for(uint32_t i = 0; i < costs.size(); ++i) {
+                if(0.001f < std::abs(check[i]-costs[i])) {
+                    fprintf(stderr, "[Debug] Failed! size = %zu, node = %u, expected = %f, calculated = %f\n", check.size(), i, check[i], costs[i]);
                     return;
                 }
             }

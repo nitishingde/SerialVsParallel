@@ -206,8 +206,8 @@ svp::Tree svp::SerialDijkstraStrategy::calculate(const svp::CsrGraph &graph, int
     std::priority_queue<Edge, std::vector<Edge>, std::greater<>> priorityQueue;
     priorityQueue.emplace(Edge(0.f, sourceNode));
     std::vector<uint8_t> visited(graph.getVertexCount(), 0);
-    auto &distances = lineageTree.distances;
-    distances[sourceNode] = 0;
+    auto &costs = lineageTree.costs;
+    costs[sourceNode] = 0;
     auto &parents = lineageTree.parents;
     parents[sourceNode] = sourceNode;
 
@@ -217,15 +217,15 @@ svp::Tree svp::SerialDijkstraStrategy::calculate(const svp::CsrGraph &graph, int
         visited[node] = true;
 
         // optimisation
-        if(distances[node] < weight) continue;
+        if(costs[node] < weight) continue;
 
         for(uint32_t i = csr[node]; i < csr[node+1]; ++i) {
             const auto neighbour = edgeList[i];
             if(visited[neighbour]) continue;
 
-            auto newDistance = distances[node] + weightList[i];
-            if(newDistance < distances[neighbour]) {
-                distances[neighbour] = newDistance;
+            auto newDistance = costs[node] + weightList[i];
+            if(newDistance < costs[neighbour]) {
+                costs[neighbour] = newDistance;
                 parents[neighbour] = node;
                 priorityQueue.emplace(Edge(newDistance, neighbour));
             }

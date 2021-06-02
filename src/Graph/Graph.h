@@ -18,7 +18,7 @@ namespace svp {
     };
 
     struct Tree {
-        std::vector<float> distances;
+        std::vector<float> costs;
         std::vector<int32_t> parents;
     };
 
