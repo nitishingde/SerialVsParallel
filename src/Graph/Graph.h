@@ -17,6 +17,13 @@ namespace svp {
         }
     };
 
+    struct Tree {
+        std::vector<float> distances;
+        std::vector<int32_t> parents;
+    };
+
+    bool verifyLineage(const CsrGraph &graph, const Tree &lineageTree);
+
     class BfsStrategy {
     public:
         virtual ~BfsStrategy() = default;
@@ -45,6 +52,19 @@ namespace svp {
     public:
         OpenCL_BfsStrategy();
         std::vector<int32_t> search(const CsrGraph &graph, int32_t sourceNode) override;
+        std::string toString() override;
+    };
+
+    class DijkstraStrategy {
+    public:
+        virtual ~DijkstraStrategy() = default;
+        virtual Tree calculate(const CsrGraph &graph, int32_t sourceNode) = 0;
+        virtual std::string toString() = 0;
+    };
+
+    class SerialDijkstraStrategy: public DijkstraStrategy {
+    public:
+        Tree calculate(const CsrGraph &graph, int32_t sourceNode) override;
         std::string toString() override;
     };
 }

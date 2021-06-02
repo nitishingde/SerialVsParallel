@@ -1,6 +1,26 @@
-#include <omp.h>
+#include <cfloat>
 #include <cmath>
+#include <omp.h>
+#include <queue>
 #include "Graph.h"
+
+bool svp::verifyLineage(const svp::CsrGraph &graph, const svp::Tree &lineageTree) {
+    const auto &edgeList = graph.edgeList;
+    const auto &csr = graph.compressedSparseRows;
+    const auto &parents = lineageTree.parents;
+
+    for(int32_t node = 0, isRelated = false; node < parents.size(); ++node) {
+        for(uint32_t i = csr[node]; i < csr[node+1]; ++i) {
+            if(edgeList[i] == parents[node]) {
+                isRelated = true;
+                break;
+            }
+        }
+        if(!isRelated) return false;
+    }
+
+    return true;
+}
 
 std::vector<int32_t> svp::SerialBfsStrategy::search(const CsrGraph &graph, int32_t sourceNode) {
     SVP_PROFILE_FUNC();
@@ -169,4 +189,52 @@ std::vector<int32_t> svp::OpenCL_BfsStrategy::search(const CsrGraph &graph, int3
 
 std::string svp::OpenCL_BfsStrategy::toString() {
     return "Do a BFS using OpenCL";
+}
+
+svp::Tree svp::SerialDijkstraStrategy::calculate(const svp::CsrGraph &graph, int32_t sourceNode) {
+    SVP_PROFILE_FUNC();
+
+    auto &csr = graph.compressedSparseRows;
+    auto &edgeList = graph.edgeList;
+    auto &weightList = graph.weightList;
+
+    Tree lineageTree {
+        std::vector<float>(graph.getVertexCount(), FLT_MAX),
+        std::vector<int32_t>(graph.getVertexCount(), -1)
+    };
+    using Edge = std::pair<float, int32_t>;
+    std::priority_queue<Edge, std::vector<Edge>, std::greater<>> priorityQueue;
+    priorityQueue.emplace(Edge(0.f, sourceNode));
+    std::vector<uint8_t> visited(graph.getVertexCount(), 0);
+    auto &distances = lineageTree.distances;
+    distances[sourceNode] = 0;
+    auto &parents = lineageTree.parents;
+    parents[sourceNode] = sourceNode;
+
+    for(;!priorityQueue.empty();) {
+        auto [weight, node] = priorityQueue.top();
+        priorityQueue.pop();
+        visited[node] = true;
+
+        // optimisation
+        if(distances[node] < weight) continue;
+
+        for(uint32_t i = csr[node]; i < csr[node+1]; ++i) {
+            const auto neighbour = edgeList[i];
+            if(visited[neighbour]) continue;
+
+            auto newDistance = distances[node] + weightList[i];
+            if(newDistance < distances[neighbour]) {
+                distances[neighbour] = newDistance;
+                parents[neighbour] = node;
+                priorityQueue.emplace(Edge(newDistance, neighbour));
+            }
+        }
+    }
+
+    return lineageTree;
+}
+
+std::string svp::SerialDijkstraStrategy::toString() {
+    return "Dijkstra's algorithm using Serial code";
 }

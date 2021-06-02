@@ -59,28 +59,22 @@ svp::CsrGraph getCsrGraph(const char *pFileName) {
     return graph;
 }
 
-std::vector<int32_t> readAnswer(const char *pFileName) {
+template<typename T = int32_t>
+std::vector<T> readAnswer(const char *pFileName) {
 #if DEBUG_GRAPH
     return {0, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2};
 #endif
     std::ifstream input(pFileName);
-    std::vector<int32_t> distances;
-    for(int32_t distance;!input.eof();) {
+    std::vector<T> distances;
+    for(T distance;!input.eof();) {
         input >> distance;
         distances.emplace_back(distance);
     }
+
     return distances;
 }
 
-int main(int argc, char **argv) {
-    std::string file =
-//        "resources/ca2010.mtx";
-        "resources/cage13.mtx";
-//        "resources/wiki-Talk.mtx";
-    auto graph = getCsrGraph((file+".adj").c_str());
-    auto sourceNode = 0;
-    auto check = readAnswer((file+".ans"+std::to_string(sourceNode)).c_str());
-
+void benchMarkBfs(const svp::CsrGraph &graph, const int32_t sourceNode, const std::vector<int32_t> &check) {
 #if not NDEBUG
     auto iterations = 1;
 #else
@@ -97,10 +91,52 @@ int main(int argc, char **argv) {
             auto distance = pStrategy->search(graph, sourceNode);
             if(check != distance) {
                 fprintf(stderr, "[Debug] Failed!\n");
-                return -1;
+                return;
             }
         }
     }
+}
+
+void benchMarkDijkstra(const svp::CsrGraph &graph, const int32_t sourceNode, const std::vector<float> &check) {
+#if not NDEBUG
+    auto iterations = 1;
+#else
+    auto iterations = 10;
+#endif
+
+    for(const auto &pStrategy: {
+        std::shared_ptr<svp::DijkstraStrategy>(new svp::SerialDijkstraStrategy()),
+    }) {
+        SVP_START_BENCHMARKING_SESSION(pStrategy->toString().c_str(), iterations) {
+            SVP_PRINT_BENCHMARKING_ITERATION();
+            auto result = pStrategy->calculate(graph, sourceNode);
+            if(!svp::verifyLineage(graph, result)) {
+                fprintf(stderr, "[Debug] Failed, wrong lineage");
+                return;
+            }
+            for(uint32_t i = 0; i < result.distances.size(); ++i) {
+                if(0.001f < std::abs(check[i]-result.distances[i])) {
+                    fprintf(stderr, "[Debug] Failed! size = %zu, node = %u, expected = %f, calculated = %f\n", check.size(), i, check[i], result.distances[i]);
+                    return;
+                }
+            }
+        }
+    }
+}
+
+int main(int argc, char **argv) {
+    std::string file =
+//        "resources/ca2010.mtx";
+        "resources/cage13.mtx";
+//        "resources/wiki-Talk.mtx";
+    auto graph = getCsrGraph((file+".adj").c_str());
+    auto sourceNode = 0;
+    auto bfsCheck = readAnswer((file+".ans"+std::to_string(sourceNode)).c_str());
+    benchMarkBfs(graph, sourceNode, bfsCheck);
+    bfsCheck.clear();
+
+    auto dijkstraCheck = readAnswer<float>((file + ".ans.sssp").c_str());
+    benchMarkDijkstra(graph, sourceNode, dijkstraCheck);
 
     return 0;
 }
