@@ -134,20 +134,24 @@ void benchMarkDijkstra(const svp::CsrGraph &graph, const int32_t sourceNode, con
 }
 
 int main(int argc, char **argv) {
-    std::string file =
-//        "resources/ca2010.mtx";
-        "resources/cage13.mtx";
-//        "resources/appu.mtx";
-//        "resources/kron_g500-logn16.mtx";
-//        "resources/wiki-Talk.mtx";
-    auto graph = getCsrGraph((file+".adj").c_str());
-    auto sourceNode = 0;
-    auto bfsCheck = readAnswer((file+".ans").c_str());
-    benchMarkBfs(graph, sourceNode, bfsCheck);
-    bfsCheck.clear();
+    for(auto &file: std::vector<std::string> {
+        "resources/ca2010.mtx",
+        "resources/cage13.mtx",
+        "resources/appu.mtx",
+        "resources/kron_g500-logn16.mtx",
+    }) {
+        printf("Graph: %s\n", file.c_str());
+        auto graph = getCsrGraph((file+".adj").c_str());
+        auto sourceNode = 0;
 
-    auto dijkstraCheck = readAnswer<float>((file + ".ans.sssp").c_str());
-    benchMarkDijkstra(graph, sourceNode, dijkstraCheck);
+        auto bfsCheck = readAnswer((file+".ans").c_str());
+        benchMarkBfs(graph, sourceNode, bfsCheck);
+        bfsCheck.clear();
+
+        auto dijkstraCheck = readAnswer<float>((file + ".ans.sssp").c_str());
+        benchMarkDijkstra(graph, sourceNode, dijkstraCheck);
+        printf("\n");
+    }
 
     return 0;
 }
