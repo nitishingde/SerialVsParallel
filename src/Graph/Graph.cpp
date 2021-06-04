@@ -4,15 +4,9 @@
 #include <queue>
 #include "Graph.h"
 
-svp::Tree::Tree(uint32_t nodes) {
-    costs = std::vector<float>(nodes, FLT_MAX);
-    parents = std::vector<int32_t>(nodes, -1);
-}
-
-bool svp::verifyLineage(const svp::CsrGraph &graph, const svp::Tree &lineageTree) {
+bool svp::verifyLineage(const svp::CsrGraph &graph, const std::vector<int32_t> &parents) {
     const auto &edgeList = graph.edgeList;
     const auto &csr = graph.compressedSparseRows;
-    const auto &parents = lineageTree.parents;
 
     for(int32_t node = 0, isRelated = false; node < parents.size(); ++node) {
         for(uint32_t i = csr[node]; i < csr[node+1]; ++i) {
@@ -27,14 +21,18 @@ bool svp::verifyLineage(const svp::CsrGraph &graph, const svp::Tree &lineageTree
     return true;
 }
 
-std::vector<int32_t> svp::SerialBfsStrategy::search(const CsrGraph &graph, int32_t sourceNode) {
+svp::WeightedTree<int32_t> svp::SerialBfsStrategy::search(const CsrGraph &graph, int32_t sourceNode) {
     SVP_PROFILE_FUNC();
+
+    WeightedTree<int32_t> lineageTree(graph.getVertexCount(), -1);
 
     auto &edgeList = graph.edgeList;
     auto &csr = graph.compressedSparseRows;
     std::vector<int32_t> frontier{sourceNode};
-    std::vector<int32_t> distances(csr.size()-1, -1);
-    distances[sourceNode] = 0;
+    auto &costs = lineageTree.costs;
+    costs[sourceNode] = 0;
+    auto &parents = lineageTree.parents;
+    parents[sourceNode] = sourceNode;
 
     for(int32_t distance = 1; !frontier.empty(); ++distance) {
         std::vector<int32_t> queue;
@@ -42,8 +40,9 @@ std::vector<int32_t> svp::SerialBfsStrategy::search(const CsrGraph &graph, int32
         for(const auto node :frontier) {
             for(uint32_t i = csr[node]; i < csr[node+1]; ++i) {
                 const auto neighbour = edgeList[i];
-                if(distances[neighbour] == -1) {
-                    distances[neighbour] = distance;
+                if(costs[neighbour] == -1) {
+                    costs[neighbour] = distance;
+                    parents[neighbour] = node;
                     queue.emplace_back(neighbour);
                 }
             }
@@ -51,7 +50,7 @@ std::vector<int32_t> svp::SerialBfsStrategy::search(const CsrGraph &graph, int32
         frontier = std::move(queue);
     }
 
-    return distances;
+    return lineageTree;
 }
 
 std::string svp::SerialBfsStrategy::toString() {
@@ -59,31 +58,36 @@ std::string svp::SerialBfsStrategy::toString() {
 }
 
 // FIXME: slower than serial code
-std::vector<int32_t> svp::OpenMP_BfsStrategy::search(const CsrGraph &graph, int32_t sourceNode) {
+svp::WeightedTree<int32_t> svp::OpenMP_BfsStrategy::search(const CsrGraph &graph, int32_t sourceNode) {
     SVP_PROFILE_FUNC();
 
+    WeightedTree<int32_t> lineageTree(graph.getVertexCount(), -1);
     omp_set_num_threads(omp_get_max_threads());
 
     auto &edgeList = graph.edgeList;
     auto &csr = graph.compressedSparseRows;
     std::vector<int32_t> frontier{sourceNode};
-    std::vector<int32_t> distances(csr.size()-1, -1);
-    distances[sourceNode] = 0;
+    auto &costs = lineageTree.costs;
+    costs[sourceNode] = 0;
+    auto &parents = lineageTree.parents;
+    parents[sourceNode] = sourceNode;
     std::vector<uint8_t> visited(csr.size()-1, 0);
     visited[sourceNode] = true;
 
     for(int32_t distance = 1; !frontier.empty(); ++distance) {
         std::vector<int32_t> queue;
         // process all the unvisited neighbouring nodes
-        #pragma omp parallel for schedule(static) default(none) firstprivate(distance) shared(edgeList, csr, frontier, queue, distances, visited)
+        #pragma omp parallel for schedule(static) default(none) firstprivate(distance) shared(edgeList, csr, frontier, queue, costs, parents, visited)
         for(int32_t i = 0; i < frontier.size(); ++i) {
-            for(uint32_t j = csr[frontier[i]]; j < csr[frontier[i]+1]; ++j) {
+            const auto node = frontier[i];
+            for(uint32_t j = csr[node]; j < csr[node+1]; ++j) {
                 const auto neighbour = edgeList[j];
                 if(!visited[neighbour]) {
                     #pragma omp critical
                     {
-                        if(distances[neighbour] == -1) {
-                            distances[neighbour] = distance;
+                        if(costs[neighbour] == -1) {
+                            costs[neighbour] = distance;
+                            parents[neighbour] = node;
                             queue.emplace_back(neighbour);
                         }
                     }
@@ -97,7 +101,7 @@ std::vector<int32_t> svp::OpenMP_BfsStrategy::search(const CsrGraph &graph, int3
         frontier = std::move(queue);
     }
 
-    return distances;
+    return lineageTree;
 }
 
 std::string svp::OpenMP_BfsStrategy::toString() {
@@ -107,8 +111,8 @@ std::string svp::OpenMP_BfsStrategy::toString() {
 void svp::OpenCL_BfsStrategy::init() {
     OpenCL_Base::init();
     cl_int status = CL_SUCCESS;
-    loadProgram("resources/Bfs.cl");
-    mKernel = cl::Kernel(mProgram, "bfsSearch", &status);
+    loadProgram("resources/bfs.cl");
+    mKernel = cl::Kernel(mProgram, "bfs", &status);
     svp::verifyOpenCL_Status(status);
 }
 
@@ -116,14 +120,13 @@ svp::OpenCL_BfsStrategy::OpenCL_BfsStrategy() {
     init();
 }
 
-std::vector<int32_t> svp::OpenCL_BfsStrategy::search(const CsrGraph &graph, int32_t sourceNode) {
+svp::WeightedTree<int32_t> svp::OpenCL_BfsStrategy::search(const CsrGraph &graph, int32_t sourceNode) {
     SVP_PROFILE_FUNC();
 
     cl_int status = CL_SUCCESS;
+    WeightedTree<int32_t> lineageTree(graph.getVertexCount(), -1);
 
     auto &edgeList = graph.edgeList;
-    auto &csr = graph.compressedSparseRows;
-
     cl::Buffer edgeListBuffer(
         mContext,
         CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
@@ -133,6 +136,7 @@ std::vector<int32_t> svp::OpenCL_BfsStrategy::search(const CsrGraph &graph, int3
     );
     verifyOpenCL_Status(status);
 
+    auto &csr = graph.compressedSparseRows;
     cl::Buffer csrBuffer(
         mContext,
         CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
@@ -142,13 +146,25 @@ std::vector<int32_t> svp::OpenCL_BfsStrategy::search(const CsrGraph &graph, int3
     );
     verifyOpenCL_Status(status);
 
-    std::vector<int32_t> distances(graph.getVertexCount(), -1);
-    distances[sourceNode] = 0;
-    cl::Buffer distanceBuffer(
+    auto &costs = lineageTree.costs;
+    memset(costs.data(), -1, costs.size() * sizeof(decltype(lineageTree.costs)::value_type));
+    costs[sourceNode] = 0;
+    cl::Buffer costsBuffer(
         mContext,
         CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-        distances.size() * sizeof(decltype(distances)::value_type),
-        distances.data(),
+        costs.size() * sizeof(decltype(lineageTree.costs)::value_type),
+        costs.data(),
+        &status
+    );
+    verifyOpenCL_Status(status);
+
+    auto &parents = lineageTree.parents;
+    parents[sourceNode] = sourceNode;
+    cl::Buffer parentsBuffer(
+        mContext,
+        CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+        parents.size() * sizeof(decltype(lineageTree.parents)::value_type),
+        parents.data(),
         &status
     );
     verifyOpenCL_Status(status);
@@ -163,15 +179,17 @@ std::vector<int32_t> svp::OpenCL_BfsStrategy::search(const CsrGraph &graph, int3
     );
     verifyOpenCL_Status(status);
 
-    verifyOpenCL_Status(mKernel.setArg(0, edgeListBuffer));
-    verifyOpenCL_Status(mKernel.setArg(1, csrBuffer));
-    verifyOpenCL_Status(mKernel.setArg(2, uint32_t(graph.getVertexCount())));
-    verifyOpenCL_Status(mKernel.setArg(3, distanceBuffer));
-    verifyOpenCL_Status(mKernel.setArg(4, frontierCountBuffer));
+    int kernelArg = 0;
+    verifyOpenCL_Status(mKernel.setArg(kernelArg++, edgeListBuffer));
+    verifyOpenCL_Status(mKernel.setArg(kernelArg++, csrBuffer));
+    verifyOpenCL_Status(mKernel.setArg(kernelArg++, uint32_t(graph.getVertexCount())));
+    verifyOpenCL_Status(mKernel.setArg(kernelArg++, costsBuffer));
+    verifyOpenCL_Status(mKernel.setArg(kernelArg++, parentsBuffer));
+    verifyOpenCL_Status(mKernel.setArg(kernelArg++, frontierCountBuffer));
 
     uint32_t globalWorkSize = mWorkGroupSize*((graph.getVertexCount()+mWorkGroupSize-1)/mWorkGroupSize);
     for(int32_t level = 0; 0 < frontierCount; ++level) {
-        verifyOpenCL_Status(mKernel.setArg(5, int32_t(level)));
+        verifyOpenCL_Status(mKernel.setArg(kernelArg, int32_t(level)));
         verifyOpenCL_Status(mCommandQueue.enqueueNDRangeKernel(
             mKernel,
             cl::NullRange,
@@ -182,14 +200,22 @@ std::vector<int32_t> svp::OpenCL_BfsStrategy::search(const CsrGraph &graph, int3
     }
 
     verifyOpenCL_Status(mCommandQueue.enqueueReadBuffer(
-        distanceBuffer,
+        costsBuffer,
         CL_TRUE,
         0,
-        distances.size() * sizeof(decltype(distances)::value_type),
-        distances.data()
+        costs.size() * sizeof(decltype(lineageTree.costs)::value_type),
+        costs.data()
     ));
 
-    return distances;
+    verifyOpenCL_Status(mCommandQueue.enqueueReadBuffer(
+        parentsBuffer,
+        CL_TRUE,
+        0,
+        parents.size() * sizeof(decltype(lineageTree.parents)::value_type),
+        parents.data()
+    ));
+
+    return lineageTree;
 }
 
 std::string svp::OpenCL_BfsStrategy::toString() {
@@ -203,7 +229,7 @@ svp::Tree svp::SerialDijkstraStrategy::calculate(const svp::CsrGraph &graph, int
     auto &edgeList = graph.edgeList;
     auto &weightList = graph.weightList;
 
-    Tree lineageTree(graph.getVertexCount());
+    Tree lineageTree(graph.getVertexCount(), FLT_MAX);
     using Edge = std::pair<float, int32_t>;
     std::priority_queue<Edge, std::vector<Edge>, std::greater<>> priorityQueue;
     priorityQueue.emplace(Edge(0.f, sourceNode));
@@ -259,7 +285,7 @@ svp::Tree svp::OpenCL_DijkstraStrategy::calculate(const svp::CsrGraph &graph, in
     SVP_PROFILE_FUNC();
 
     cl_int status = CL_SUCCESS;
-    svp::Tree lineageTree(graph.getVertexCount());
+    svp::Tree lineageTree(graph.getVertexCount(), FLT_MAX);
 
     auto &edgeList = graph.edgeList;
     cl::Buffer edgeListBuffer(

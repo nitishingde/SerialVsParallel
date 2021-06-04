@@ -17,30 +17,36 @@ namespace svp {
         }
     };
 
-    struct Tree {
-        explicit Tree(uint32_t nodes);
-        std::vector<float> costs;
+    template<typename Weight>
+    struct WeightedTree {
+        explicit WeightedTree(uint32_t nodes, Weight defaultWeight) {
+            static_assert(std::is_arithmetic_v<Weight>);
+            costs = std::vector<Weight>(nodes, defaultWeight);
+            parents = std::vector<int32_t>(nodes, -1);
+        }
+        std::vector<Weight> costs;
         std::vector<int32_t> parents;
     };
+    using Tree = WeightedTree<float>;
 
-    bool verifyLineage(const CsrGraph &graph, const Tree &lineageTree);
+    bool verifyLineage(const CsrGraph &graph, const std::vector<int32_t> &parents);
 
     class BfsStrategy {
     public:
         virtual ~BfsStrategy() = default;
-        virtual std::vector<int32_t> search(const CsrGraph &graph, int32_t sourceNode) = 0;
+        virtual WeightedTree<int32_t> search(const CsrGraph &graph, int32_t sourceNode) = 0;
         virtual std::string toString() = 0;
     };
 
     class SerialBfsStrategy: public BfsStrategy {
     public:
-        std::vector<int32_t> search(const CsrGraph &graph, int32_t sourceNode) override;
+        WeightedTree<int32_t> search(const CsrGraph &graph, int32_t sourceNode) override;
         std::string toString() override;
     };
 
     class OpenMP_BfsStrategy: public BfsStrategy {
     public:
-        std::vector<int32_t> search(const CsrGraph &graph, int32_t sourceNode) override;
+        WeightedTree<int32_t> search(const CsrGraph &graph, int32_t sourceNode) override;
         std::string toString() override;
     };
 
@@ -52,7 +58,7 @@ namespace svp {
         void init() override;
     public:
         OpenCL_BfsStrategy();
-        std::vector<int32_t> search(const CsrGraph &graph, int32_t sourceNode) override;
+        WeightedTree<int32_t> search(const CsrGraph &graph, int32_t sourceNode) override;
         std::string toString() override;
     };
 
