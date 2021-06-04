@@ -90,7 +90,7 @@ void benchMarkBfs(const svp::CsrGraph &graph, const int32_t sourceNode, const st
             SVP_PRINT_BENCHMARKING_ITERATION();
             auto result = pStrategy->search(graph, sourceNode);
             if(!svp::verifyLineage(graph, result.parents, result.rootNode)) {
-                fprintf(stderr, "[Debug] Failed, wrong lineage");
+                fprintf(stderr, "[Debug] Failed, wrong lineage\n");
                 return;
             }
             const auto &costs = result.costs;
@@ -119,7 +119,7 @@ void benchMarkDijkstra(const svp::CsrGraph &graph, const int32_t sourceNode, con
             SVP_PRINT_BENCHMARKING_ITERATION();
             auto result = pStrategy->calculate(graph, sourceNode);
             if(!svp::verifyLineage(graph, result.parents, result.rootNode)) {
-                fprintf(stderr, "[Debug] Failed, wrong lineage");
+                fprintf(stderr, "[Debug] Failed, wrong lineage\n");
                 return;
             }
             const auto &costs = result.costs;
