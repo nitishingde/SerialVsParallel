@@ -19,16 +19,18 @@ namespace svp {
 
     template<typename Weight>
     struct WeightedTree {
-        explicit WeightedTree(uint32_t nodes, Weight defaultWeight) {
+        explicit WeightedTree(int32_t rootNode, uint32_t nodes, Weight defaultWeight) {
             static_assert(std::is_arithmetic_v<Weight>);
             costs = std::vector<Weight>(nodes, defaultWeight);
             parents = std::vector<int32_t>(nodes, -1);
+            this->rootNode = parents[rootNode] = rootNode;
         }
+        int32_t rootNode;
         std::vector<Weight> costs;
         std::vector<int32_t> parents;
     };
 
-    bool verifyLineage(const CsrGraph &graph, const std::vector<int32_t> &parents);
+    bool verifyLineage(const CsrGraph &graph, const std::vector<int32_t> &parents, const int32_t rootNode);
 
     class BfsStrategy {
     public:
