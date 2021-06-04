@@ -323,6 +323,17 @@ svp::Tree svp::OpenCL_DijkstraStrategy::calculate(const svp::CsrGraph &graph, in
     );
     verifyOpenCL_Status(status);
 
+    auto &parents = lineageTree.parents;
+    parents[sourceNode] = sourceNode;
+    cl::Buffer parentsBuffer(
+        mContext,
+        CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+        parents.size() * sizeof(decltype(lineageTree.parents)::value_type),
+        parents.data(),
+        &status
+    );
+    verifyOpenCL_Status(status);
+
     uint32_t updatedCount = 1;
     cl::Buffer updatedCountBuffer(
         mContext,
@@ -333,23 +344,23 @@ svp::Tree svp::OpenCL_DijkstraStrategy::calculate(const svp::CsrGraph &graph, in
     );
     verifyOpenCL_Status(status);
 
-    verifyOpenCL_Status(mCalculateCostKernel.setArg(0, edgeListBuffer));
-    verifyOpenCL_Status(mCalculateCostKernel.setArg(1, weightListBuffer));
-    verifyOpenCL_Status(mCalculateCostKernel.setArg(2, csrBuffer));
-    verifyOpenCL_Status(mCalculateCostKernel.setArg(3, uint32_t(graph.getVertexCount())));
-    verifyOpenCL_Status(mCalculateCostKernel.setArg(4, maskBuffer));
-    verifyOpenCL_Status(mCalculateCostKernel.setArg(5, costsBuffer));
-    verifyOpenCL_Status(mCalculateCostKernel.setArg(6, updatedCostsBuffer));
-    verifyOpenCL_Status(mCalculateCostKernel.setArg(7, updatedCountBuffer));
+    int kernelArg = 0;
+    verifyOpenCL_Status(mCalculateCostKernel.setArg(kernelArg++, edgeListBuffer));
+    verifyOpenCL_Status(mCalculateCostKernel.setArg(kernelArg++, weightListBuffer));
+    verifyOpenCL_Status(mCalculateCostKernel.setArg(kernelArg++, csrBuffer));
+    verifyOpenCL_Status(mCalculateCostKernel.setArg(kernelArg++, uint32_t(graph.getVertexCount())));
+    verifyOpenCL_Status(mCalculateCostKernel.setArg(kernelArg++, maskBuffer));
+    verifyOpenCL_Status(mCalculateCostKernel.setArg(kernelArg++, costsBuffer));
+    verifyOpenCL_Status(mCalculateCostKernel.setArg(kernelArg++, updatedCostsBuffer));
+    verifyOpenCL_Status(mCalculateCostKernel.setArg(kernelArg++, parentsBuffer));
+    verifyOpenCL_Status(mCalculateCostKernel.setArg(kernelArg++, updatedCountBuffer));
 
-    verifyOpenCL_Status(mUpdateCostKernel.setArg(0, edgeListBuffer));
-    verifyOpenCL_Status(mUpdateCostKernel.setArg(1, weightListBuffer));
-    verifyOpenCL_Status(mUpdateCostKernel.setArg(2, csrBuffer));
-    verifyOpenCL_Status(mUpdateCostKernel.setArg(3, uint32_t(graph.getVertexCount())));
-    verifyOpenCL_Status(mUpdateCostKernel.setArg(4, maskBuffer));
-    verifyOpenCL_Status(mUpdateCostKernel.setArg(5, costsBuffer));
-    verifyOpenCL_Status(mUpdateCostKernel.setArg(6, updatedCostsBuffer));
-    verifyOpenCL_Status(mUpdateCostKernel.setArg(7, updatedCountBuffer));
+    kernelArg = 0;
+    verifyOpenCL_Status(mUpdateCostKernel.setArg(kernelArg++, uint32_t(graph.getVertexCount())));
+    verifyOpenCL_Status(mUpdateCostKernel.setArg(kernelArg++, maskBuffer));
+    verifyOpenCL_Status(mUpdateCostKernel.setArg(kernelArg++, costsBuffer));
+    verifyOpenCL_Status(mUpdateCostKernel.setArg(kernelArg++, updatedCostsBuffer));
+    verifyOpenCL_Status(mUpdateCostKernel.setArg(kernelArg++, updatedCountBuffer));
 
     uint32_t globalWorkSize = mWorkGroupSize*((graph.getVertexCount()+mWorkGroupSize-1)/mWorkGroupSize);
     for(; 0 < updatedCount;) {
@@ -376,6 +387,14 @@ svp::Tree svp::OpenCL_DijkstraStrategy::calculate(const svp::CsrGraph &graph, in
         0,
         costs.size() * sizeof(decltype(lineageTree.costs)::value_type),
         costs.data()
+    ));
+
+    verifyOpenCL_Status(mCommandQueue.enqueueReadBuffer(
+        parentsBuffer,
+        CL_TRUE,
+        0,
+        parents.size() * sizeof(decltype(lineageTree.parents)::value_type),
+        parents.data()
     ));
 
     return lineageTree;

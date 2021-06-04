@@ -111,10 +111,10 @@ void benchMarkDijkstra(const svp::CsrGraph &graph, const int32_t sourceNode, con
         SVP_START_BENCHMARKING_SESSION(pStrategy->toString().c_str(), iterations) {
             SVP_PRINT_BENCHMARKING_ITERATION();
             auto result = pStrategy->calculate(graph, sourceNode);
-//            if(!svp::verifyLineage(graph, result)) {
-//                fprintf(stderr, "[Debug] Failed, wrong lineage");
-//                return;
-//            }
+            if(!svp::verifyLineage(graph, result)) {
+                fprintf(stderr, "[Debug] Failed, wrong lineage");
+                return;
+            }
             const auto &costs = result.costs;
             for(uint32_t i = 0; i < costs.size(); ++i) {
                 if(0.001f < std::abs(check[i]-costs[i])) {

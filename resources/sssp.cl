@@ -1,6 +1,7 @@
-inline void atomic_minf(volatile __global float *pFloat, float val) {
+inline float atomic_minf(volatile __global float *pFloat, float val) {
     for(float current; val < (current = *pFloat);)
         val = atomic_xchg(pFloat, min(current, val));
+    return val;
 }
 
 __kernel void calculateCost(
@@ -11,6 +12,7 @@ __kernel void calculateCost(
     __global uchar *pMask,
     __global float *pCost,
     __global float *pUpdatedCost,
+    __global int *pParent,
     __global uint *pUpdatedCount
 ) {
     size_t vertex = get_global_id(0);
@@ -20,14 +22,17 @@ __kernel void calculateCost(
     atomic_dec(pUpdatedCount);
     pMask[vertex] = false;
     for(uint i = pCsr[vertex]; i < pCsr[vertex + 1]; ++i) {
-        atomic_minf(&pUpdatedCost[pEdgeList[i]], pCost[vertex] + pWeightList[i]);
+        uint neighbour = pEdgeList[i];
+        float cost = pCost[vertex] + pWeightList[i];
+        if(cost < atomic_minf(&pUpdatedCost[neighbour], cost)) {
+            if(cost < pCost[neighbour]) {
+                atomic_xchg(&pParent[neighbour], vertex);
+            }
+        }
     }
 }
 
 __kernel void updateCost(
-    __constant uint *pEdgeList,
-    __constant float *pWeightList,
-    __constant uint *pCsr,
     __const uint vertexCount,
     __global uchar *pMask,
     __global float *pCost,
