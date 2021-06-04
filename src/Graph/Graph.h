@@ -18,6 +18,7 @@ namespace svp {
     };
 
     struct Tree {
+        explicit Tree(uint32_t nodes);
         std::vector<float> costs;
         std::vector<int32_t> parents;
     };
@@ -64,6 +65,19 @@ namespace svp {
 
     class SerialDijkstraStrategy: public DijkstraStrategy {
     public:
+        Tree calculate(const CsrGraph &graph, int32_t sourceNode) override;
+        std::string toString() override;
+    };
+
+    class OpenCL_DijkstraStrategy: public DijkstraStrategy, private OpenCL_Base {
+    private:
+        cl::Kernel mCalculateCostKernel;
+        cl::Kernel mUpdateCostKernel;
+
+    private:
+        void init() override;
+    public:
+        OpenCL_DijkstraStrategy();
         Tree calculate(const CsrGraph &graph, int32_t sourceNode) override;
         std::string toString() override;
     };
