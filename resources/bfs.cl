@@ -12,15 +12,15 @@ __kernel void bfs(
     size_t vertex = get_global_id(0);
     if(vertexCount <= vertex) return;
 
-    if(atomic_cmpxchg(&pCosts[vertex], level, level) != level) return;
+    if(pCosts[vertex] != level) return;
 
     // remove vertex as frontier
-    atomic_dec(&pFrontierCount[0]);
+    atomic_dec(pFrontierCount);
     for(uint i = pCsr[vertex]; i < pCsr[vertex + 1]; ++i) {
         uint neighbour = pEdgeList[i];
         if(atomic_cmpxchg(&pCosts[neighbour], UNVISITED, level + 1) == UNVISITED) {
             pParents[neighbour] = vertex;
-            atomic_inc(&pFrontierCount[0]);
+            atomic_inc(pFrontierCount);
         }
     }
 }
