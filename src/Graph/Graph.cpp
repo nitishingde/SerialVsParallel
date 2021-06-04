@@ -222,14 +222,14 @@ std::string svp::OpenCL_BfsStrategy::toString() {
     return "Do a BFS using OpenCL";
 }
 
-svp::Tree svp::SerialDijkstraStrategy::calculate(const svp::CsrGraph &graph, int32_t sourceNode) {
+svp::WeightedTree<float> svp::SerialDijkstraStrategy::calculate(const svp::CsrGraph &graph, int32_t sourceNode) {
     SVP_PROFILE_FUNC();
 
     auto &csr = graph.compressedSparseRows;
     auto &edgeList = graph.edgeList;
     auto &weightList = graph.weightList;
 
-    Tree lineageTree(graph.getVertexCount(), FLT_MAX);
+    WeightedTree<float> lineageTree(graph.getVertexCount(), FLT_MAX);
     using Edge = std::pair<float, int32_t>;
     std::priority_queue<Edge, std::vector<Edge>, std::greater<>> priorityQueue;
     priorityQueue.emplace(Edge(0.f, sourceNode));
@@ -281,11 +281,11 @@ svp::OpenCL_DijkstraStrategy::OpenCL_DijkstraStrategy() {
     init();
 }
 
-svp::Tree svp::OpenCL_DijkstraStrategy::calculate(const svp::CsrGraph &graph, int32_t sourceNode) {
+svp::WeightedTree<float> svp::OpenCL_DijkstraStrategy::calculate(const svp::CsrGraph &graph, int32_t sourceNode) {
     SVP_PROFILE_FUNC();
 
     cl_int status = CL_SUCCESS;
-    svp::Tree lineageTree(graph.getVertexCount(), FLT_MAX);
+    WeightedTree<float> lineageTree(graph.getVertexCount(), FLT_MAX);
 
     auto &edgeList = graph.edgeList;
     cl::Buffer edgeListBuffer(

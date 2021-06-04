@@ -27,7 +27,6 @@ namespace svp {
         std::vector<Weight> costs;
         std::vector<int32_t> parents;
     };
-    using Tree = WeightedTree<float>;
 
     bool verifyLineage(const CsrGraph &graph, const std::vector<int32_t> &parents);
 
@@ -65,13 +64,13 @@ namespace svp {
     class DijkstraStrategy {
     public:
         virtual ~DijkstraStrategy() = default;
-        virtual Tree calculate(const CsrGraph &graph, int32_t sourceNode) = 0;
+        virtual WeightedTree<float> calculate(const CsrGraph &graph, int32_t sourceNode) = 0;
         virtual std::string toString() = 0;
     };
 
     class SerialDijkstraStrategy: public DijkstraStrategy {
     public:
-        Tree calculate(const CsrGraph &graph, int32_t sourceNode) override;
+        WeightedTree<float> calculate(const CsrGraph &graph, int32_t sourceNode) override;
         std::string toString() override;
     };
 
@@ -84,7 +83,7 @@ namespace svp {
         void init() override;
     public:
         OpenCL_DijkstraStrategy();
-        Tree calculate(const CsrGraph &graph, int32_t sourceNode) override;
+        WeightedTree<float> calculate(const CsrGraph &graph, int32_t sourceNode) override;
         std::string toString() override;
     };
 }
