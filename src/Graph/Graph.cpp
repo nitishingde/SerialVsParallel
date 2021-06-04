@@ -272,9 +272,9 @@ void svp::OpenCL_DijkstraStrategy::init() {
     cl_int status = CL_SUCCESS;
     loadProgram("resources/sssp.cl");
     mCalculateCostKernel = cl::Kernel(mProgram, "calculateCost", &status);
-    svp::verifyOpenCL_Status(status);
+    verifyOpenCL_Status(status);
     mUpdateCostKernel = cl::Kernel(mProgram, "updateCost", &status);
-    svp::verifyOpenCL_Status(status);
+    verifyOpenCL_Status(status);
 }
 
 svp::OpenCL_DijkstraStrategy::OpenCL_DijkstraStrategy() {
@@ -317,13 +317,13 @@ svp::WeightedTree<float> svp::OpenCL_DijkstraStrategy::calculate(const svp::CsrG
     );
     verifyOpenCL_Status(status);
 
-    std::vector<uint8_t> mask(graph.getVertexCount(), 0);
-    mask[sourceNode] = true;
-    cl::Buffer maskBuffer(
+    std::vector<uint8_t> masks(graph.getVertexCount(), 0);
+    masks[sourceNode] = true;
+    cl::Buffer masksBuffer(
         mContext,
         CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-        mask.size() * sizeof(decltype(mask)::value_type),
-        mask.data(),
+        masks.size() * sizeof(decltype(masks)::value_type),
+        masks.data(),
         &status
     );
 
@@ -375,7 +375,7 @@ svp::WeightedTree<float> svp::OpenCL_DijkstraStrategy::calculate(const svp::CsrG
     verifyOpenCL_Status(mCalculateCostKernel.setArg(kernelArg++, weightListBuffer));
     verifyOpenCL_Status(mCalculateCostKernel.setArg(kernelArg++, csrBuffer));
     verifyOpenCL_Status(mCalculateCostKernel.setArg(kernelArg++, uint32_t(graph.getVertexCount())));
-    verifyOpenCL_Status(mCalculateCostKernel.setArg(kernelArg++, maskBuffer));
+    verifyOpenCL_Status(mCalculateCostKernel.setArg(kernelArg++, masksBuffer));
     verifyOpenCL_Status(mCalculateCostKernel.setArg(kernelArg++, costsBuffer));
     verifyOpenCL_Status(mCalculateCostKernel.setArg(kernelArg++, updatedCostsBuffer));
     verifyOpenCL_Status(mCalculateCostKernel.setArg(kernelArg++, parentsBuffer));
@@ -383,7 +383,7 @@ svp::WeightedTree<float> svp::OpenCL_DijkstraStrategy::calculate(const svp::CsrG
 
     kernelArg = 0;
     verifyOpenCL_Status(mUpdateCostKernel.setArg(kernelArg++, uint32_t(graph.getVertexCount())));
-    verifyOpenCL_Status(mUpdateCostKernel.setArg(kernelArg++, maskBuffer));
+    verifyOpenCL_Status(mUpdateCostKernel.setArg(kernelArg++, masksBuffer));
     verifyOpenCL_Status(mUpdateCostKernel.setArg(kernelArg++, costsBuffer));
     verifyOpenCL_Status(mUpdateCostKernel.setArg(kernelArg++, updatedCostsBuffer));
     verifyOpenCL_Status(mUpdateCostKernel.setArg(kernelArg++, updatedCountBuffer));

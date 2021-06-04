@@ -9,24 +9,24 @@ __kernel void calculateCost(
     __constant float *pWeightList,
     __constant uint *pCsr,
     __const uint vertexCount,
-    __global uchar *pMask,
-    __global float *pCost,
-    __global float *pUpdatedCost,
-    __global int *pParent,
+    __global uchar *pMasks,
+    __global float *pCosts,
+    __global float *pUpdatedCosts,
+    __global int *pParents,
     __global uint *pUpdatedCount
 ) {
     size_t vertex = get_global_id(0);
     if(vertexCount <= vertex) return;
-    if(!pMask[vertex]) return;
+    if(!pMasks[vertex]) return;
 
     atomic_dec(pUpdatedCount);
-    pMask[vertex] = false;
+    pMasks[vertex] = false;
     for(uint i = pCsr[vertex]; i < pCsr[vertex + 1]; ++i) {
         uint neighbour = pEdgeList[i];
-        float cost = pCost[vertex] + pWeightList[i];
-        if(cost < atomic_minf(&pUpdatedCost[neighbour], cost)) {
-            if(cost < pCost[neighbour]) {
-                atomic_xchg(&pParent[neighbour], vertex);
+        float cost = pCosts[vertex] + pWeightList[i];
+        if(cost < atomic_minf(&pUpdatedCosts[neighbour], cost)) {
+            if(cost < pCosts[neighbour]) {
+                atomic_xchg(&pParents[neighbour], vertex);
             }
         }
     }
@@ -34,18 +34,18 @@ __kernel void calculateCost(
 
 __kernel void updateCost(
     __const uint vertexCount,
-    __global uchar *pMask,
-    __global float *pCost,
-    __global float *pUpdatedCost,
+    __global uchar *pMasks,
+    __global float *pCosts,
+    __global float *pUpdatedCosts,
     __global uint *pUpdatedCount
 ) {
     size_t vertex = get_global_id(0);
     if(vertexCount <= vertex) return;
 
-    if(pUpdatedCost[vertex] < pCost[vertex]) {
-        pCost[vertex] = pUpdatedCost[vertex];
-        pMask[vertex] = true;
+    if(pUpdatedCosts[vertex] < pCosts[vertex]) {
+        pCosts[vertex] = pUpdatedCosts[vertex];
+        pMasks[vertex] = true;
         atomic_inc(pUpdatedCount);
     }
-    pUpdatedCost[vertex] = pCost[vertex];
+    pUpdatedCosts[vertex] = pCosts[vertex];
 }
