@@ -39,7 +39,9 @@ namespace svp {
     class OpenCL_Base {
     protected:
         bool mIsInitialised = false;
-        size_t mWorkGroupSize {};
+        size_t mWorkGroupSize1d;
+        size_t mWorkGroupSize2d;
+        size_t mWorkGroupSize3d;
         cl::Context mContext;
         cl::Device mDevice;
         cl::Program mProgram;

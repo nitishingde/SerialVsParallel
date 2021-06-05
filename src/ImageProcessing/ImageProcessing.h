@@ -4,6 +4,7 @@
 
 #include <CL/cl.hpp>
 #include <opencv2/opencv.hpp>
+#include "../Utility.h"
 
 namespace svp {
     bool cmp(const cv::Mat &image1, const cv::Mat &image2);
@@ -21,32 +22,24 @@ namespace svp {
         std::string toString() override;
     };
 
-    class NNI_OpenCL: public ImageScalingStrategy {
+    class NNI_OpenCL: public ImageScalingStrategy, private OpenCL_Base {
     private:
-        bool isInitialised = false;
-        cl::Context mContext;
-        cl::Device mDevice;
         cl::Kernel mKernel;
-        cl::CommandQueue mCommandQueue;
 
     private:
-        void init();
+        void init() override;
     public:
         explicit NNI_OpenCL();
         cv::Mat transform(const cv::Mat &image, float scaleX, float scaleY) override;
         std::string toString() override;
     };
 
-    class NNI_OpenCL2: public ImageScalingStrategy {
+    class NNI_OpenCL2: public ImageScalingStrategy, private OpenCL_Base {
     private:
-        bool isInitialised = false;
-        cl::Context mContext;
-        cl::Device mDevice;
         cl::Kernel mKernel;
-        cl::CommandQueue mCommandQueue;
 
     private:
-        void init();
+        void init() override;
     public:
         explicit NNI_OpenCL2();
         cv::Mat transform(const cv::Mat &image, float scaleX, float scaleY) override;

@@ -123,10 +123,22 @@ void svp::OpenCL_Base::init() {
     mDevice = devices.front();
 
     // 512 on my machine
-    mWorkGroupSize = mDevice.getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>(&status);
+    mWorkGroupSize1d = mDevice.getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>(&status);
     svp::verifyOpenCL_Status(status);
+    for(size_t i = 1, foundWorkGroupSize3d = false; ; i<<=1) {
+        if(mWorkGroupSize1d < i * i) {
+            mWorkGroupSize2d = i>>1;
+            break;
+        }
+        if(!foundWorkGroupSize3d and mWorkGroupSize1d < i * i * i) {
+            mWorkGroupSize3d = i>>1;
+            foundWorkGroupSize3d = true;
+        }
+    }
 #if not NDEBUG
-    printf("[DEBUG] Work Group size: %zu\n", mWorkGroupSize);
+    printf("[DEBUG] Work Group size 1d: %zu\n", mWorkGroupSize1d);
+    printf("[DEBUG] Work Group size 2d: %zu, %zu\n", mWorkGroupSize2d, mWorkGroupSize2d);
+    printf("[DEBUG] Work Group size 3d: %zu, %zu, %zu\n", mWorkGroupSize3d, mWorkGroupSize3d, mWorkGroupSize3d);
 #endif
 
     mCommandQueue = cl::CommandQueue(mContext, mDevice, 0, &status);

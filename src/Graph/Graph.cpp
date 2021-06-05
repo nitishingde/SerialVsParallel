@@ -190,14 +190,14 @@ svp::WeightedTree<int32_t> svp::OpenCL_BfsStrategy::search(const CsrGraph &graph
     verifyOpenCL_Status(mKernel.setArg(kernelArg++, parentsBuffer));
     verifyOpenCL_Status(mKernel.setArg(kernelArg++, frontierCountBuffer));
 
-    uint32_t globalWorkSize = mWorkGroupSize*((graph.getVertexCount()+mWorkGroupSize-1)/mWorkGroupSize);
+    uint32_t globalWorkSize = mWorkGroupSize1d * ((graph.getVertexCount() + mWorkGroupSize1d - 1) / mWorkGroupSize1d);
     for(int32_t level = 0; 0 < frontierCount; ++level) {
         verifyOpenCL_Status(mKernel.setArg(kernelArg, int32_t(level)));
         verifyOpenCL_Status(mCommandQueue.enqueueNDRangeKernel(
             mKernel,
             cl::NullRange,
             cl::NDRange(globalWorkSize),
-            cl::NDRange(mWorkGroupSize)
+            cl::NDRange(mWorkGroupSize1d)
         ));
         verifyOpenCL_Status(mCommandQueue.enqueueReadBuffer(frontierCountBuffer, CL_TRUE, 0, sizeof(int32_t), &frontierCount));
     }
@@ -391,20 +391,20 @@ svp::WeightedTree<float> svp::OpenCL_DijkstraStrategy::calculate(const svp::CsrG
     verifyOpenCL_Status(mUpdateCostKernel.setArg(kernelArg++, updatedCostsBuffer));
     verifyOpenCL_Status(mUpdateCostKernel.setArg(kernelArg++, updatedCountBuffer));
 
-    uint32_t globalWorkSize = mWorkGroupSize*((graph.getVertexCount()+mWorkGroupSize-1)/mWorkGroupSize);
+    uint32_t globalWorkSize = mWorkGroupSize1d * ((graph.getVertexCount() + mWorkGroupSize1d - 1) / mWorkGroupSize1d);
     for(; 0 < updatedCount;) {
         verifyOpenCL_Status(mCommandQueue.enqueueNDRangeKernel(
             mCalculateCostKernel,
             cl::NullRange,
             cl::NDRange(globalWorkSize),
-            cl::NDRange(mWorkGroupSize)
+            cl::NDRange(mWorkGroupSize1d)
         ));
 
         verifyOpenCL_Status(mCommandQueue.enqueueNDRangeKernel(
             mUpdateCostKernel,
             cl::NullRange,
             cl::NDRange(globalWorkSize),
-            cl::NDRange(mWorkGroupSize)
+            cl::NDRange(mWorkGroupSize1d)
         ));
 
         verifyOpenCL_Status(mCommandQueue.enqueueReadBuffer(updatedCountBuffer, CL_TRUE, 0, sizeof(uint32_t), &updatedCount));
