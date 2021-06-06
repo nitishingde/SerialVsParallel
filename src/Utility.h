@@ -87,15 +87,18 @@ namespace svp {
 
 #define SVP_PROFILING 1
 #if SVP_PROFILING
+    #define TOKEN_PASTE_(x, y) x##y
+    #define CONCAT_(x, y) TOKEN_PASTE_(x, y)
+
     #define SVP_START_BENCHMARKING_SESSION(name, iterations)                                                        \
-    svp::BenchMarker benchMarker##__LINE__(name);                                                                   \
+    svp::BenchMarker CONCAT_(benchMarker, __LINE__)(name);                                                          \
     for(uint32_t svp_iteration = 0, svp_iterations = iterations; svp_iteration < svp_iterations; ++svp_iteration)
 
     #define SVP_PRINT_BENCHMARKING_ITERATION()                      \
     printf("Iteration : %u/%u\r", svp_iteration+1, svp_iterations); \
     fflush(stdout)
 
-    #define SVP_PROFILE_SCOPE(name) svp::Timer timer##__LINE__(name)
+    #define SVP_PROFILE_SCOPE(name) svp::Timer CONCAT_(timer, __LINE__)(name)
     #define SVP_PROFILE_FUNC() SVP_PROFILE_SCOPE(__PRETTY_FUNCTION__)
 #else
     #define SVP_START_BENCHMARKING_SESSION(name, iterations)

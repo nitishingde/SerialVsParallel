@@ -48,13 +48,13 @@ void svp::Profiler::flush() const {
     printf("> Session         : %s\n", mSession.c_str());
     for(const auto &it: mExecutions) {
         auto &executionTime = it.second;
-        printf("> Function        : %s\n", it.first.c_str());
+        printf("> Scope           : %s\n", it.first.c_str());
         printf("> Iterations      : %zu\n", executionTime.size());
         printf("Avg Execution Time: %.9gs\n", std::accumulate(executionTime.begin(), executionTime.end(), 0.0)/executionTime.size());
         printf("Min Execution Time: %.9gs\n", *std::min_element(executionTime.begin(), executionTime.end()));
         printf("Max Execution Time: %.9gs\n", *std::max_element(executionTime.begin(), executionTime.end()));
     }
-    printf("\n");
+    printf("%s\n", std::string(160, '-').c_str());
 }
 
 void svp::Profiler::startSession(const char *pSession) {

@@ -140,7 +140,9 @@ int main(int argc, char **argv) {
         "resources/appu.mtx",
         "resources/kron_g500-logn16.mtx",
     }) {
+        printf("%s\n", std::string(160, '=').c_str());
         printf("Graph: %s\n", file.c_str());
+        printf("%s\n", std::string(160, '=').c_str());
         auto graph = getCsrGraph((file+".adj").c_str());
         auto sourceNode = 0;
 
