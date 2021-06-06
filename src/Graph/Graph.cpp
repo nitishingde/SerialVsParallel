@@ -193,13 +193,23 @@ svp::WeightedTree<int32_t> svp::OpenCL_BfsStrategy::search(const CsrGraph &graph
     uint32_t globalWorkSize = mWorkGroupSize1d * ((graph.getVertexCount() + mWorkGroupSize1d - 1) / mWorkGroupSize1d);
     for(int32_t level = 0; 0 < frontierCount; ++level) {
         verifyOpenCL_Status(mKernel.setArg(kernelArg, int32_t(level)));
+
+        cl::Event kernelEvent;
         verifyOpenCL_Status(mCommandQueue.enqueueNDRangeKernel(
             mKernel,
             cl::NullRange,
             cl::NDRange(globalWorkSize),
-            cl::NDRange(mWorkGroupSize1d)
+            cl::NDRange(mWorkGroupSize1d),
+            nullptr,
+            &kernelEvent
         ));
-        verifyOpenCL_Status(mCommandQueue.enqueueReadBuffer(frontierCountBuffer, CL_TRUE, 0, sizeof(int32_t), &frontierCount));
+
+        cl::Event readBufferEvent;
+        verifyOpenCL_Status(mCommandQueue.enqueueReadBuffer(frontierCountBuffer, CL_TRUE, 0, sizeof(int32_t), &frontierCount, nullptr, &readBufferEvent));
+#if not NDEBUG
+        SVP_PROFILE_OPENCL(kernelEvent);
+        SVP_PROFILE_OPENCL(readBufferEvent);
+#endif
     }
 
     verifyOpenCL_Status(mCommandQueue.enqueueReadBuffer(
@@ -393,21 +403,33 @@ svp::WeightedTree<float> svp::OpenCL_DijkstraStrategy::calculate(const svp::CsrG
 
     uint32_t globalWorkSize = mWorkGroupSize1d * ((graph.getVertexCount() + mWorkGroupSize1d - 1) / mWorkGroupSize1d);
     for(; 0 < updatedCount;) {
+        cl::Event calculateCostKernelEvent;
         verifyOpenCL_Status(mCommandQueue.enqueueNDRangeKernel(
             mCalculateCostKernel,
             cl::NullRange,
             cl::NDRange(globalWorkSize),
-            cl::NDRange(mWorkGroupSize1d)
+            cl::NDRange(mWorkGroupSize1d),
+            nullptr,
+            &calculateCostKernelEvent
         ));
 
+        cl::Event updateCostKernelEvent;
         verifyOpenCL_Status(mCommandQueue.enqueueNDRangeKernel(
             mUpdateCostKernel,
             cl::NullRange,
             cl::NDRange(globalWorkSize),
-            cl::NDRange(mWorkGroupSize1d)
+            cl::NDRange(mWorkGroupSize1d),
+            nullptr,
+            &updateCostKernelEvent
         ));
 
-        verifyOpenCL_Status(mCommandQueue.enqueueReadBuffer(updatedCountBuffer, CL_TRUE, 0, sizeof(uint32_t), &updatedCount));
+        cl::Event readBufferEvent;
+        verifyOpenCL_Status(mCommandQueue.enqueueReadBuffer(updatedCountBuffer, CL_TRUE, 0, sizeof(uint32_t), &updatedCount, nullptr, &readBufferEvent));
+#if not NDEBUG
+        SVP_PROFILE_OPENCL(calculateCostKernelEvent);
+        SVP_PROFILE_OPENCL(updateCostKernelEvent);
+        SVP_PROFILE_OPENCL(readBufferEvent);
+#endif
     }
 
     verifyOpenCL_Status(mCommandQueue.enqueueReadBuffer(
