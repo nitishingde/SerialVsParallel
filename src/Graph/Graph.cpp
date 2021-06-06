@@ -205,10 +205,12 @@ svp::WeightedTree<int32_t> svp::OpenCL_BfsStrategy::search(const CsrGraph &graph
         ));
 
         cl::Event readBufferEvent;
-        verifyOpenCL_Status(mCommandQueue.enqueueReadBuffer(frontierCountBuffer, CL_TRUE, 0, sizeof(int32_t), &frontierCount, nullptr, &readBufferEvent));
+        if(level%4 == 0) {
+            verifyOpenCL_Status(mCommandQueue.enqueueReadBuffer(frontierCountBuffer, CL_TRUE, 0, sizeof(int32_t), &frontierCount, nullptr, &readBufferEvent));
+        }
 #if not NDEBUG
         SVP_PROFILE_OPENCL(kernelEvent);
-        SVP_PROFILE_OPENCL(readBufferEvent);
+        if(level%4 == 0) SVP_PROFILE_OPENCL(readBufferEvent);
 #endif
     }
 
@@ -402,7 +404,7 @@ svp::WeightedTree<float> svp::OpenCL_DijkstraStrategy::calculate(const svp::CsrG
     verifyOpenCL_Status(mUpdateCostKernel.setArg(kernelArg++, updatedCountBuffer));
 
     uint32_t globalWorkSize = mWorkGroupSize1d * ((graph.getVertexCount() + mWorkGroupSize1d - 1) / mWorkGroupSize1d);
-    for(; 0 < updatedCount;) {
+    for(int32_t i = 0; 0 < updatedCount; ++i) {
         cl::Event calculateCostKernelEvent;
         verifyOpenCL_Status(mCommandQueue.enqueueNDRangeKernel(
             mCalculateCostKernel,
@@ -424,11 +426,13 @@ svp::WeightedTree<float> svp::OpenCL_DijkstraStrategy::calculate(const svp::CsrG
         ));
 
         cl::Event readBufferEvent;
-        verifyOpenCL_Status(mCommandQueue.enqueueReadBuffer(updatedCountBuffer, CL_TRUE, 0, sizeof(uint32_t), &updatedCount, nullptr, &readBufferEvent));
+        if(i%4 == 0) {
+            verifyOpenCL_Status(mCommandQueue.enqueueReadBuffer(updatedCountBuffer, CL_TRUE, 0, sizeof(uint32_t), &updatedCount, nullptr, &readBufferEvent));
+        }
 #if not NDEBUG
         SVP_PROFILE_OPENCL(calculateCostKernelEvent);
         SVP_PROFILE_OPENCL(updateCostKernelEvent);
-        SVP_PROFILE_OPENCL(readBufferEvent);
+        if(i%4 == 0) SVP_PROFILE_OPENCL(readBufferEvent);
 #endif
     }
 
