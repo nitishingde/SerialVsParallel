@@ -28,6 +28,11 @@ namespace svp {
         ~Timer();
     };
 
+    class OpenCL_Timer {
+    public:
+        explicit OpenCL_Timer(const char *pName, const cl::Event &event);
+    };
+
     class OpenCL_Exception : public std::exception {
     private:
         std::string mErrorMessage;
@@ -100,6 +105,7 @@ namespace svp {
 
     #define SVP_PROFILE_SCOPE(name) svp::Timer CONCAT_(timer, __LINE__)(name)
     #define SVP_PROFILE_FUNC() SVP_PROFILE_SCOPE(__PRETTY_FUNCTION__)
+    #define SVP_PROFILE_OPENCL(event) OpenCL_Timer(#event, event)
 #else
     #define SVP_START_BENCHMARKING_SESSION(name, iterations)
     #define SVP_PRINT_BENCHMARKING_ITERATION()

@@ -102,6 +102,20 @@ svp::Timer::~Timer() {
     });
 }
 
+svp::OpenCL_Timer::OpenCL_Timer(const char *pName, const cl::Event &event) {
+    cl_int status = CL_SUCCESS;
+    verifyOpenCL_Status(event.wait());
+    auto start = event.getProfilingInfo<CL_PROFILING_COMMAND_START>(&status);
+    verifyOpenCL_Status(status);
+    auto end = event.getProfilingInfo<CL_PROFILING_COMMAND_END>(&status);
+    verifyOpenCL_Status(status);
+
+    Profiler::getInstance()->log(ProfileResult {
+        .name = pName,
+        .elapsedTime = double(end-start) / 1.e9
+    });
+}
+
 svp::OpenCL_Exception::OpenCL_Exception(cl_int error) {
     mErrorMessage = "[Error] Code, Msg = (" + std::to_string(error) + ", " + svp::getOpenCL_ErrorMessage(error) + ")";
 }
@@ -135,13 +149,12 @@ void svp::OpenCL_Base::init() {
             foundWorkGroupSize3d = true;
         }
     }
-#if not NDEBUG
-    printf("[DEBUG] Work Group size 1d: %zu\n", mWorkGroupSize1d);
-    printf("[DEBUG] Work Group size 2d: %zu, %zu\n", mWorkGroupSize2d, mWorkGroupSize2d);
-    printf("[DEBUG] Work Group size 3d: %zu, %zu, %zu\n", mWorkGroupSize3d, mWorkGroupSize3d, mWorkGroupSize3d);
+#if NDEBUG
+    cl_command_queue_properties properties = 0;
+#else
+    cl_command_queue_properties properties = CL_QUEUE_PROFILING_ENABLE;
 #endif
-
-    mCommandQueue = cl::CommandQueue(mContext, mDevice, 0, &status);
+    mCommandQueue = cl::CommandQueue(mContext, mDevice, properties, &status);
     svp::verifyOpenCL_Status(status);
 
     mIsInitialised = true;
