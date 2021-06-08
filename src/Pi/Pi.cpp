@@ -13,6 +13,8 @@
 #define CACHE_PADDING 8
 
 double svp::SerialPiStrategy::calculatePi(uint32_t steps) {
+    SVP_PROFILE_SCOPE(toString().c_str());
+
     const double delta = 1.0 / steps;
     double area = 0.0;
 
@@ -29,6 +31,8 @@ std::string svp::SerialPiStrategy::toString() {
 }
 
 double svp::OpenMP_PiStrategy::calculatePi(uint32_t steps) {
+    SVP_PROFILE_SCOPE(toString().c_str());
+
     const double delta = 1.0 / steps;
     std::vector<double> area(omp_get_max_threads()*2, 0.0);
 
@@ -51,6 +55,8 @@ std::string svp::OpenMP_PiStrategy::toString() {
 }
 
 double svp::CacheFriendlyOpenMP_PiStrategy::calculatePi(uint32_t steps) {
+    SVP_PROFILE_SCOPE(toString().c_str());
+
     const double delta = 1.0 / steps;
     uint32_t maxThreadsPossible = omp_get_max_threads();
     double area[maxThreadsPossible][CACHE_PADDING];
@@ -82,6 +88,8 @@ std::string svp::CacheFriendlyOpenMP_PiStrategy::toString() {
 }
 
 double svp::AtomicBarrierOpenMP_PiStrategy::calculatePi(uint32_t steps) {
+    SVP_PROFILE_SCOPE(toString().c_str());
+
     const double delta = 1.0 / steps;
     double area = 0.0;
 
@@ -106,6 +114,8 @@ std::string svp::AtomicBarrierOpenMP_PiStrategy::toString() {
 }
 
 double svp::ReductionOpenMP_PiStrategy::calculatePi(uint32_t steps) {
+    SVP_PROFILE_SCOPE(toString().c_str());
+
     const double delta = 1.0 / steps;
     double area = 0.0;
 
@@ -144,7 +154,7 @@ void svp::OpenCL_PiStrategy::init() {
 
     cl::Program program(
         mContext,
-        std::regex_replace(svp::readScript("Pi.cl"), std::regex("%workGroupSize%"), std::to_string(mWorkGroupSize)),
+        std::regex_replace(svp::readScript("resources/Pi.cl"), std::regex("%workGroupSize%"), std::to_string(mWorkGroupSize)),
         false,
         &status
     );
@@ -164,6 +174,8 @@ svp::OpenCL_PiStrategy::OpenCL_PiStrategy() {
 }
 
 double svp::OpenCL_PiStrategy::calculatePi(uint32_t steps) {
+    SVP_PROFILE_SCOPE(toString().c_str());
+
     cl_int status = CL_SUCCESS;
     const double delta = 1.0 / steps;
 
@@ -208,6 +220,8 @@ std::string svp::OpenCL_PiStrategy::toString() {
 }
 
 double svp::MPI_PiStrategy::calculatePi(uint32_t steps) {
+    SVP_PROFILE_SCOPE(toString().c_str());
+
     double pi = 0.0;
     double delta = 1.0 / steps;
     double area = 0.0;
@@ -218,10 +232,8 @@ double svp::MPI_PiStrategy::calculatePi(uint32_t steps) {
     MPI_Bcast(&steps, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
 #if not NDEBUG
-    if(svp::isMpiRootPid()) {
-        printf("[Debug] No of processes = %d\n", noOfProcesses);
-    }
-    printf("[Debug] Process Id = %d\n", processId);
+    printf("[Debug] No of processes = %d\n", noOfProcesses);
+    dprintf("[Debug] Process Id = %d\n", processId);
 #endif
 
     for (size_t step = processId; step < steps; step += noOfProcesses) {
@@ -240,6 +252,8 @@ std::string svp::MPI_PiStrategy::toString() {
 }
 
 double svp::HybridMpiOpenMP_PiStrategy::calculatePi(uint32_t steps) {
+    SVP_PROFILE_SCOPE(toString().c_str());
+
     double pi = 0.0;
     double delta = 1.0 / steps;
     double area = 0.0;
@@ -250,10 +264,8 @@ double svp::HybridMpiOpenMP_PiStrategy::calculatePi(uint32_t steps) {
     MPI_Bcast(&steps, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
 #if not NDEBUG
-    if(svp::isMpiRootPid()) {
-        printf("[Debug] No of processes = %d\n", noOfProcesses);
-    }
-    printf("[Debug] Process Id      = %d\n", processId);
+    printf("[Debug] No of processes = %d\n", noOfProcesses);
+    dprintf("[Debug] Process Id      = %d\n", processId);
 #endif
 
     omp_set_num_threads(omp_get_max_threads());
@@ -271,50 +283,4 @@ double svp::HybridMpiOpenMP_PiStrategy::calculatePi(uint32_t steps) {
 
 std::string svp::HybridMpiOpenMP_PiStrategy::toString() {
     return "Calculate Pi using MPI and OpenMP";
-}
-
-svp::PiBenchMarker::PiBenchMarker(std::unique_ptr<PiStrategy> pPiStrategy)
-    : mpPiStrategy(std::move(pPiStrategy))
-{}
-
-void svp::PiBenchMarker::setPiStrategy(std::unique_ptr<PiStrategy> pPiStrategy) {
-    mpPiStrategy = std::move(pPiStrategy);
-}
-
-void svp::PiBenchMarker::benchmarkCalculatePi(uint32_t iterations, uint32_t steps) const {
-    std::vector<double> executionTime(iterations, 0.0);
-    double pi = 0.0;
-
-    for(uint32_t iteration = 0; iteration < executionTime.size(); ++iteration) {
-#if NDEBUG
-        if(svp::isMpiRootPid()) {
-            printf("\rIteration: %u/%u", iteration+1, iterations);
-            fflush(stdout);
-        }
-#endif
-
-        auto start = std::chrono::high_resolution_clock::now();
-        pi += mpPiStrategy->calculatePi(steps);
-        auto end = std::chrono::high_resolution_clock::now();
-        executionTime[iteration] = std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count()/1.e9;
-#if not NDEBUG
-        if(svp::isMpiRootPid()) {
-            printf("[Debug] Execution Time for iteration (%u, %u): %0.9gs\n", iteration+1, iterations, executionTime[iteration]);
-        }
-#endif
-
-    }
-    pi /= iterations;
-
-    if(!svp::isMpiRootPid()) return;
-    printf("\r");
-    printf("> Strategy        : %s\n", mpPiStrategy->toString().c_str());
-    printf("> Iterations      : %u\n", iterations);
-    printf("> Steps           : %u\n", steps);
-    printf("Pi                : %0.17g\n", pi);
-    printf("Error margin      : %0.17g %%\n", (std::abs(pi-M_PI)*100.0)/M_PI);
-    printf("Avg Execution Time: %.9gs\n", std::accumulate(executionTime.begin(), executionTime.end(), 0.0)/executionTime.size());
-    printf("Min Execution Time: %.9gs\n", *std::min_element(executionTime.begin(), executionTime.end()));
-    printf("Max Execution Time: %.9gs\n", *std::max_element(executionTime.begin(), executionTime.end()));
-    printf("\n");
 }

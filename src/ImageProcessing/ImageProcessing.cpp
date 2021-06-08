@@ -1,7 +1,5 @@
 #include "ImageProcessing.h"
-#include "../Utility.h"
 #include <chrono>
-#include <numeric>
 
 bool svp::cmp(const cv::Mat &image1, const cv::Mat &image2) {
     return
@@ -13,6 +11,8 @@ bool svp::cmp(const cv::Mat &image1, const cv::Mat &image2) {
 }
 
 cv::Mat svp::NNI_Serial::transform(const cv::Mat &image, float scaleX, float scaleY) {
+    SVP_PROFILE_SCOPE(toString().c_str());
+
     auto channelSize = image.channels();
     cv::Mat scaledImage(std::round(image.rows * scaleY), std::round(image.cols * scaleX), CV_8UC(channelSize));
     for(int32_t scaledI = 0; scaledI < scaledImage.rows; ++scaledI) {
@@ -34,35 +34,16 @@ svp::NNI_OpenCL::NNI_OpenCL() {
 }
 
 void svp::NNI_OpenCL::init() {
-    if(isInitialised) return;
-
+    OpenCL_Base::init();
     cl_int status = CL_SUCCESS;
-
-    mContext = cl::Context(CL_DEVICE_TYPE_GPU, nullptr, nullptr, nullptr, &status);
+    OpenCL_Base::loadProgram("resources/ImageScaling.cl");
+    mKernel = cl::Kernel(mProgram, "nearestNeighbourInterpolation", &status);
     svp::verifyOpenCL_Status(status);
-
-    auto devices = mContext.getInfo<CL_CONTEXT_DEVICES>(&status);
-    svp::verifyOpenCL_Status(status);
-    mDevice = devices.front();
-
-    cl::Program program(
-        mContext,
-        svp::readScript("ImageScaling.cl"),
-        false,
-        &status
-    );
-    svp::verifyOpenCL_Status(status);
-    svp::verifyOpenCL_Status(program.build("-cl-std=CL1.2"));
-    mKernel = cl::Kernel(program, "nearestNeighbourInterpolation", &status);
-    svp::verifyOpenCL_Status(status);
-
-    mCommandQueue = cl::CommandQueue(mContext, mDevice, 0, &status);
-    svp::verifyOpenCL_Status(status);
-
-    isInitialised = true;
 }
 
 cv::Mat svp::NNI_OpenCL::transform(const cv::Mat &image, float scaleX, float scaleY) {
+    SVP_PROFILE_SCOPE(toString().c_str());
+
     cl_int status;
     cv::Mat scaledImage(std::round(image.rows * scaleY), std::round(image.cols * scaleX), CV_8UC(image.channels()));
 
@@ -86,15 +67,26 @@ cv::Mat svp::NNI_OpenCL::transform(const cv::Mat &image, float scaleX, float sca
     );
     verifyOpenCL_Status(status);
 
-    verifyOpenCL_Status(mKernel.setArg(0, srcImageBuffer));
-    verifyOpenCL_Status(mKernel.setArg(1, cl_uint(image.step1())));
-    verifyOpenCL_Status(mKernel.setArg(2, scaledImageBuffer));
-    verifyOpenCL_Status(mKernel.setArg(3, cl_uint(scaledImage.step1())));
-    verifyOpenCL_Status(mKernel.setArg(4, cl_uint(image.channels())));
-    verifyOpenCL_Status(mKernel.setArg(5, cl_float(scaleX)));
-    verifyOpenCL_Status(mKernel.setArg(6, cl_float(scaleY)));
+    int kernelArg = 0;
+    verifyOpenCL_Status(mKernel.setArg(kernelArg++, srcImageBuffer));
+    verifyOpenCL_Status(mKernel.setArg(kernelArg++, cl_uint(image.step1())));
+    verifyOpenCL_Status(mKernel.setArg(kernelArg++, scaledImageBuffer));
+    verifyOpenCL_Status(mKernel.setArg(kernelArg++, cl_uint(scaledImage.rows)));
+    verifyOpenCL_Status(mKernel.setArg(kernelArg++, cl_uint(scaledImage.cols)));
+    verifyOpenCL_Status(mKernel.setArg(kernelArg++, cl_uint(scaledImage.step1())));
+    verifyOpenCL_Status(mKernel.setArg(kernelArg++, cl_uint(image.channels())));
+    verifyOpenCL_Status(mKernel.setArg(kernelArg++, cl_float(scaleX)));
+    verifyOpenCL_Status(mKernel.setArg(kernelArg++, cl_float(scaleY)));
 
-    verifyOpenCL_Status(mCommandQueue.enqueueNDRangeKernel(mKernel, cl::NullRange, cl::NDRange(scaledImage.rows, scaledImage.cols), cl::NDRange(1, 1)));
+    verifyOpenCL_Status(mCommandQueue.enqueueNDRangeKernel(
+        mKernel,
+        cl::NullRange,
+        cl::NDRange(
+            mWorkGroupSize2d*((scaledImage.rows + mWorkGroupSize2d - 1)/mWorkGroupSize2d),
+            mWorkGroupSize2d*((scaledImage.cols + mWorkGroupSize2d - 1)/mWorkGroupSize2d)
+        ),
+        cl::NDRange(mWorkGroupSize2d, mWorkGroupSize2d)
+    ));
     verifyOpenCL_Status(mCommandQueue.enqueueReadBuffer(scaledImageBuffer, CL_TRUE, 0, scaledImageSize, scaledImage.data));
 
     return scaledImage;
@@ -105,32 +97,11 @@ std::string svp::NNI_OpenCL::toString() {
 }
 
 void svp::NNI_OpenCL2::init() {
-    if(isInitialised) return;
-
+    OpenCL_Base::init();
     cl_int status = CL_SUCCESS;
-
-    mContext = cl::Context(CL_DEVICE_TYPE_GPU, nullptr, nullptr, nullptr, &status);
+    OpenCL_Base::loadProgram("resources/ImageScaling.cl");
+    mKernel = cl::Kernel(mProgram, "nearestNeighbourInterpolation2", &status);
     svp::verifyOpenCL_Status(status);
-
-    auto devices = mContext.getInfo<CL_CONTEXT_DEVICES>(&status);
-    svp::verifyOpenCL_Status(status);
-    mDevice = devices.front();
-
-    cl::Program program(
-        mContext,
-        svp::readScript("ImageScaling.cl"),
-        false,
-        &status
-    );
-    svp::verifyOpenCL_Status(status);
-    svp::verifyOpenCL_Status(program.build("-cl-std=CL1.2"));
-    mKernel = cl::Kernel(program, "nearestNeighbourInterpolation2", &status);
-    svp::verifyOpenCL_Status(status);
-
-    mCommandQueue = cl::CommandQueue(mContext, mDevice, 0, &status);
-    svp::verifyOpenCL_Status(status);
-
-    isInitialised = true;
 }
 
 svp::NNI_OpenCL2::NNI_OpenCL2() {
@@ -138,6 +109,8 @@ svp::NNI_OpenCL2::NNI_OpenCL2() {
 }
 
 cv::Mat svp::NNI_OpenCL2::transform(const cv::Mat &image, float scaleX, float scaleY) {
+    SVP_PROFILE_SCOPE(toString().c_str());
+
     cl_int status;
     cv::Mat scaledImage(std::round(image.rows * scaleY), std::round(image.cols * scaleX), CV_8UC(image.channels()));
 
@@ -167,16 +140,22 @@ cv::Mat svp::NNI_OpenCL2::transform(const cv::Mat &image, float scaleX, float sc
     );
     verifyOpenCL_Status(status);
 
-    verifyOpenCL_Status(mKernel.setArg(0, srcImage2D));
-    verifyOpenCL_Status(mKernel.setArg(1, scaledImage2D));
-    verifyOpenCL_Status(mKernel.setArg(2, cl_float(scaleX)));
-    verifyOpenCL_Status(mKernel.setArg(3, cl_float(scaleY)));
+    int kernelArg = 0;
+    verifyOpenCL_Status(mKernel.setArg(kernelArg++, srcImage2D));
+    verifyOpenCL_Status(mKernel.setArg(kernelArg++, scaledImage2D));
+    verifyOpenCL_Status(mKernel.setArg(kernelArg++, cl_uint(scaledImage.rows)));
+    verifyOpenCL_Status(mKernel.setArg(kernelArg++, cl_uint(scaledImage.cols)));
+    verifyOpenCL_Status(mKernel.setArg(kernelArg++, cl_float(scaleX)));
+    verifyOpenCL_Status(mKernel.setArg(kernelArg++, cl_float(scaleY)));
 
     verifyOpenCL_Status(mCommandQueue.enqueueNDRangeKernel(
         mKernel,
         cl::NullRange,
-        cl::NDRange(scaledImage.rows, scaledImage.cols),
-        cl::NDRange(1, 1)
+        cl::NDRange(
+            mWorkGroupSize2d*((scaledImage.rows + mWorkGroupSize2d - 1)/mWorkGroupSize2d),
+            mWorkGroupSize2d*((scaledImage.cols + mWorkGroupSize2d - 1)/mWorkGroupSize2d)
+        ),
+        cl::NDRange(mWorkGroupSize2d, mWorkGroupSize2d)
     ));
 
     cl::size_t<3> region;
@@ -196,43 +175,4 @@ cv::Mat svp::NNI_OpenCL2::transform(const cv::Mat &image, float scaleX, float sc
 
 std::string svp::NNI_OpenCL2::toString() {
     return "Scaling image using Nearest Neighbour Interpolation using OpenCL with inbuilt image functionality";
-}
-
-svp::ImageScalingBenchMarker::ImageScalingBenchMarker(std::unique_ptr<ImageScalingStrategy> pImageScalingStrategy)
-    : mpImageScalingStrategy(std::move(pImageScalingStrategy)) {
-}
-
-void svp::ImageScalingBenchMarker::setImageScalingStrategy(std::unique_ptr<ImageScalingStrategy> pImageScalingStrategy) {
-    mpImageScalingStrategy = std::move(pImageScalingStrategy);
-}
-
-void svp::ImageScalingBenchMarker::benchmarkImageScaling(uint32_t iterations, const cv::Mat &image, float scaleX, float scaleY, const cv::Mat &expectedResult) const {
-    std::vector<double> executionTime(iterations, 0.0);
-
-    for(uint32_t iteration = 0; iteration < executionTime.size(); ++iteration) {
-#if NDEBUG
-        printf("\rIteration: %u/%u", iteration+1, iterations);
-        fflush(stdout);
-#endif
-
-        auto start = std::chrono::high_resolution_clock::now();
-        auto scaledImage = mpImageScalingStrategy->transform(image, scaleX, scaleY);
-        auto end = std::chrono::high_resolution_clock::now();
-        executionTime[iteration] = std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count()/1.e9;
-#if not NDEBUG
-        if(!cmp(scaledImage, expectedResult)) {
-            return;
-        }
-        printf("[Debug] Execution Time for iteration (%u, %u): %0.9gs\n", iteration+1, iterations, executionTime[iteration]);
-#endif
-    }
-
-    printf("\r");
-    printf("> Strategy        : %s\n", mpImageScalingStrategy->toString().c_str());
-    printf("> Iterations      : %u\n", iterations);
-    printf("> ~Loops/iteration: %g\n", double(expectedResult.total())*double(expectedResult.channels()));
-    printf("Avg Execution Time: %.9gs\n", std::accumulate(executionTime.begin(), executionTime.end(), 0.0)/executionTime.size());
-    printf("Min Execution Time: %.9gs\n", *std::min_element(executionTime.begin(), executionTime.end()));
-    printf("Max Execution Time: %.9gs\n", *std::max_element(executionTime.begin(), executionTime.end()));
-    printf("\n");
 }

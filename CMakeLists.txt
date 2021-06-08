@@ -10,9 +10,9 @@ find_package(MPI REQUIRED)
 find_package(OpenCV REQUIRED)
 
 add_custom_target(CopyScripts ALL
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_CURRENT_SOURCE_DIR}/scripts
-        ${CMAKE_CURRENT_BINARY_DIR}/
+        COMMAND ${CMAKE_COMMAND} -E create_symlink
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources
+        ${CMAKE_CURRENT_BINARY_DIR}/resources
 )
 
 add_library(Utility
@@ -82,3 +82,14 @@ target_link_libraries(ImageProcessing
         Utility
 )
 add_dependencies(ImageProcessing CopyScripts)
+
+add_executable(Graph
+        src/Graph/main.cpp
+        src/Graph/Graph.cpp src/Graph/Graph.h
+)
+target_link_libraries(Graph
+    PUBLIC
+        OpenMP::OpenMP_CXX
+        Utility
+)
+add_dependencies(Graph CopyScripts)

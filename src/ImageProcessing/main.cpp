@@ -1,8 +1,8 @@
+#include <memory>
 #include "ImageProcessing.h"
 
-
 int main(int argc, char **argv) {
-    auto image = cv::imread("2048x1024.png", cv::ImreadModes::IMREAD_UNCHANGED);
+    auto image = cv::imread("resources/2048x1024.png", cv::ImreadModes::IMREAD_UNCHANGED);
     if(image.channels() == 3) {
         cv::cvtColor(image, image, cv::ColorConversionCodes::COLOR_BGR2BGRA);
     }
@@ -10,16 +10,23 @@ int main(int argc, char **argv) {
     //float scaleX = 4.f/3.f, scaleY = 5.f/3.f;
     float scaleX = 4.f, scaleY = 5.f;
 
-    svp::ImageScalingBenchMarker imageScalingBenchMarker;
+    SVP_START_BENCHMARKING_SESSION("Image scaling");
     for(auto [pImageScalingStrategy, interpolationFlag]: {
-        std::make_tuple(static_cast<svp::ImageScalingStrategy*>(new svp::NNI_Serial()), cv::InterpolationFlags::INTER_NEAREST),
-        std::make_tuple(static_cast<svp::ImageScalingStrategy*>(new svp::NNI_OpenCL()), cv::InterpolationFlags::INTER_NEAREST),
-        std::make_tuple(static_cast<svp::ImageScalingStrategy*>(new svp::NNI_OpenCL2()), cv::InterpolationFlags::INTER_NEAREST),
+        std::make_tuple(std::shared_ptr<svp::ImageScalingStrategy>(new svp::NNI_Serial()), cv::InterpolationFlags::INTER_NEAREST),
+        std::make_tuple(std::shared_ptr<svp::ImageScalingStrategy>(new svp::NNI_OpenCL()), cv::InterpolationFlags::INTER_NEAREST),
+        std::make_tuple(std::shared_ptr<svp::ImageScalingStrategy>(new svp::NNI_OpenCL2()), cv::InterpolationFlags::INTER_NEAREST),
     }) {
-        imageScalingBenchMarker.setImageScalingStrategy(std::unique_ptr<svp::ImageScalingStrategy>(pImageScalingStrategy));
         cv::Mat expectedResult;
         cv::resize(image, expectedResult, cv::Size(), scaleX, scaleY, interpolationFlag);
-        imageScalingBenchMarker.benchmarkImageScaling(10, image, scaleX, scaleY, expectedResult);
+        SVP_START_BENCHMARKING_ITERATIONS(10) {
+            SVP_PRINT_BENCHMARKING_ITERATION();
+            auto result = pImageScalingStrategy->transform(image, scaleX, scaleY);
+#if not NDEBUG
+            if(!svp::cmp(result, expectedResult)) {
+                return -1;
+            }
+#endif
+        }
     }
 
     return 0;
