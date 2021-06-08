@@ -13,7 +13,7 @@
 #define CACHE_PADDING 8
 
 double svp::SerialPiStrategy::calculatePi(uint32_t steps) {
-    SVP_PROFILE_FUNC();
+    SVP_PROFILE_SCOPE(toString().c_str());
 
     const double delta = 1.0 / steps;
     double area = 0.0;
@@ -31,7 +31,7 @@ std::string svp::SerialPiStrategy::toString() {
 }
 
 double svp::OpenMP_PiStrategy::calculatePi(uint32_t steps) {
-    SVP_PROFILE_FUNC();
+    SVP_PROFILE_SCOPE(toString().c_str());
 
     const double delta = 1.0 / steps;
     std::vector<double> area(omp_get_max_threads()*2, 0.0);
@@ -55,7 +55,7 @@ std::string svp::OpenMP_PiStrategy::toString() {
 }
 
 double svp::CacheFriendlyOpenMP_PiStrategy::calculatePi(uint32_t steps) {
-    SVP_PROFILE_FUNC();
+    SVP_PROFILE_SCOPE(toString().c_str());
 
     const double delta = 1.0 / steps;
     uint32_t maxThreadsPossible = omp_get_max_threads();
@@ -88,7 +88,7 @@ std::string svp::CacheFriendlyOpenMP_PiStrategy::toString() {
 }
 
 double svp::AtomicBarrierOpenMP_PiStrategy::calculatePi(uint32_t steps) {
-    SVP_PROFILE_FUNC();
+    SVP_PROFILE_SCOPE(toString().c_str());
 
     const double delta = 1.0 / steps;
     double area = 0.0;
@@ -114,7 +114,7 @@ std::string svp::AtomicBarrierOpenMP_PiStrategy::toString() {
 }
 
 double svp::ReductionOpenMP_PiStrategy::calculatePi(uint32_t steps) {
-    SVP_PROFILE_FUNC();
+    SVP_PROFILE_SCOPE(toString().c_str());
 
     const double delta = 1.0 / steps;
     double area = 0.0;
@@ -174,7 +174,7 @@ svp::OpenCL_PiStrategy::OpenCL_PiStrategy() {
 }
 
 double svp::OpenCL_PiStrategy::calculatePi(uint32_t steps) {
-    SVP_PROFILE_FUNC();
+    SVP_PROFILE_SCOPE(toString().c_str());
 
     cl_int status = CL_SUCCESS;
     const double delta = 1.0 / steps;
@@ -220,7 +220,7 @@ std::string svp::OpenCL_PiStrategy::toString() {
 }
 
 double svp::MPI_PiStrategy::calculatePi(uint32_t steps) {
-    SVP_PROFILE_FUNC();
+    SVP_PROFILE_SCOPE(toString().c_str());
 
     double pi = 0.0;
     double delta = 1.0 / steps;
@@ -252,7 +252,7 @@ std::string svp::MPI_PiStrategy::toString() {
 }
 
 double svp::HybridMpiOpenMP_PiStrategy::calculatePi(uint32_t steps) {
-    SVP_PROFILE_FUNC();
+    SVP_PROFILE_SCOPE(toString().c_str());
 
     double pi = 0.0;
     double delta = 1.0 / steps;

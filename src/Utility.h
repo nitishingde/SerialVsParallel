@@ -6,6 +6,21 @@
 #include <CL/cl.hpp>
 #include <unordered_map>
 
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_BLUE    "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
+
+#define RED(x) ANSI_COLOR_RED x ANSI_COLOR_RESET
+#define GREEN(x) ANSI_COLOR_GREEN x ANSI_COLOR_RESET
+#define YELLOW(x) ANSI_COLOR_YELLOW x ANSI_COLOR_RESET
+#define BLUE(x) ANSI_COLOR_BLUE x ANSI_COLOR_RESET
+#define MAGENTA(x) ANSI_COLOR_MAGENTA x ANSI_COLOR_RESET
+#define CYAN(x) ANSI_COLOR_CYAN x ANSI_COLOR_RESET
+
 namespace svp {
     /**
      * RAII
@@ -95,8 +110,8 @@ namespace svp {
     #define TOKEN_PASTE_(x, y) x##y
     #define CONCAT_(x, y) TOKEN_PASTE_(x, y)
 
-    #define SVP_START_BENCHMARKING_SESSION(name, iterations)                                                        \
-    svp::BenchMarker CONCAT_(benchMarker, __LINE__)(name);                                                          \
+    #define SVP_START_BENCHMARKING_SESSION(name) svp::BenchMarker CONCAT_(benchMarker, __LINE__)(name)
+    #define SVP_START_BENCHMARKING_ITERATIONS(iterations) \
     for(uint32_t svp_iteration = 0, svp_iterations = iterations; svp_iteration < svp_iterations; ++svp_iteration)
 
     #define SVP_PRINT_BENCHMARKING_ITERATION()                      \
@@ -107,10 +122,12 @@ namespace svp {
     #define SVP_PROFILE_FUNC() SVP_PROFILE_SCOPE(__PRETTY_FUNCTION__)
     #define SVP_PROFILE_OPENCL(event) OpenCL_Timer(#event, event)
 #else
-    #define SVP_START_BENCHMARKING_SESSION(name, iterations)
+    #define SVP_START_BENCHMARKING_SESSION(name)
+    #define SVP_START_BENCHMARKING_ITERATIONS(iterations)
     #define SVP_PRINT_BENCHMARKING_ITERATION()
     #define SVP_PROFILE_SCOPE(name)
     #define SVP_PROFILE_FUNC()
+    #define SVP_PROFILE_OPENCL(event)
 #endif
 
 #define VALGRIND_ON 0

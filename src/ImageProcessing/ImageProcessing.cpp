@@ -11,7 +11,7 @@ bool svp::cmp(const cv::Mat &image1, const cv::Mat &image2) {
 }
 
 cv::Mat svp::NNI_Serial::transform(const cv::Mat &image, float scaleX, float scaleY) {
-    SVP_PROFILE_FUNC();
+    SVP_PROFILE_SCOPE(toString().c_str());
 
     auto channelSize = image.channels();
     cv::Mat scaledImage(std::round(image.rows * scaleY), std::round(image.cols * scaleX), CV_8UC(channelSize));
@@ -42,7 +42,7 @@ void svp::NNI_OpenCL::init() {
 }
 
 cv::Mat svp::NNI_OpenCL::transform(const cv::Mat &image, float scaleX, float scaleY) {
-    SVP_PROFILE_FUNC();
+    SVP_PROFILE_SCOPE(toString().c_str());
 
     cl_int status;
     cv::Mat scaledImage(std::round(image.rows * scaleY), std::round(image.cols * scaleX), CV_8UC(image.channels()));
@@ -109,7 +109,7 @@ svp::NNI_OpenCL2::NNI_OpenCL2() {
 }
 
 cv::Mat svp::NNI_OpenCL2::transform(const cv::Mat &image, float scaleX, float scaleY) {
-    SVP_PROFILE_FUNC();
+    SVP_PROFILE_SCOPE(toString().c_str());
 
     cl_int status;
     cv::Mat scaledImage(std::round(image.rows * scaleY), std::round(image.cols * scaleX), CV_8UC(image.channels()));

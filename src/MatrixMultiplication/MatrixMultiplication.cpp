@@ -16,7 +16,7 @@ bool svp::DotProductStrategy::verifyMatrices(const svp::Matrix &matrix1, const s
 
 void svp::SerialDotProductStrategy::calculateDotProduct(const svp::Matrix &matrix1, const svp::Matrix &matrix2, svp::Matrix &result) {
     if(!verifyMatrices(matrix1, matrix2, result)) return;
-    SVP_PROFILE_FUNC();
+    SVP_PROFILE_SCOPE(toString().c_str());
 
     for(size_t i = 0; i < matrix1.size(); ++i) {
         for(size_t j = 0; j < matrix2[0].size(); ++j) {
@@ -34,7 +34,7 @@ std::string svp::SerialDotProductStrategy::toString() {
 
 void svp::OpenMP_DotProductStrategy::calculateDotProduct(const svp::Matrix &matrix1, const svp::Matrix &matrix2, svp::Matrix &result) {
     if(!verifyMatrices(matrix1, matrix2, result)) return;
-    SVP_PROFILE_FUNC();
+    SVP_PROFILE_SCOPE(toString().c_str());
 
     omp_set_num_threads(omp_get_num_procs());
     #pragma omp parallel for default(none) shared(matrix1, matrix2, result)
@@ -98,7 +98,7 @@ svp::OpenCL_DotProductStrategy::OpenCL_DotProductStrategy() {
 }
 
 void svp::OpenCL_DotProductStrategy::calculateDotProduct(const svp::Matrix &matrix1, const svp::Matrix &matrix2, svp::Matrix &result) {
-    SVP_PROFILE_FUNC();
+    SVP_PROFILE_SCOPE(toString().c_str());
 
     cl_int status = CL_SUCCESS;
 

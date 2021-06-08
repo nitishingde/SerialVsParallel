@@ -16,7 +16,7 @@ namespace svp {
     class Profiler {
     private:
         Profiler() = default;
-        std::unordered_map<std::string, std::vector<double>> mExecutions;
+        std::vector<std::pair<std::string, std::vector<double>>> mExecutions;
         std::string mSession;
 
     private:
@@ -45,16 +45,32 @@ svp::Profiler* svp::Profiler::getInstance() {
 }
 
 void svp::Profiler::flush() const {
-    printf("> Session         : %s\n", mSession.c_str());
+    printf("|----------------------------------|------------------------------------------------------------------|------------|--------------|--------------|--------------|\n");
+    printf(
+        "| "
+        MAGENTA("Session") "                          | "
+        MAGENTA("Scope") "                                                            | "
+        MAGENTA("Iterations") " | "
+        MAGENTA("Avg") "          | "
+        MAGENTA("Min") "          | "
+        MAGENTA("Max") "          |\n"
+    );
+    printf("|----------------------------------|------------------------------------------------------------------|------------|--------------|--------------|--------------|\n");
+
     for(const auto &it: mExecutions) {
         auto &executionTime = it.second;
-        printf("> Scope           : %s\n", it.first.c_str());
-        printf("> Iterations      : %zu\n", executionTime.size());
-        printf("Avg Execution Time: %.9gs\n", std::accumulate(executionTime.begin(), executionTime.end(), 0.0)/executionTime.size());
-        printf("Min Execution Time: %.9gs\n", *std::min_element(executionTime.begin(), executionTime.end()));
-        printf("Max Execution Time: %.9gs\n", *std::max_element(executionTime.begin(), executionTime.end()));
+        printf(
+            "| " CYAN("%-32.32s") " | " YELLOW("%-64.64s") " | %-10zu | " BLUE("%.9f") "s | " GREEN("%.9f") "s | " RED("%.9f") "s |\n",
+            mSession.c_str(),
+            it.first.c_str(),
+            executionTime.size(),
+            std::accumulate(executionTime.begin(), executionTime.end(), 0.0)/executionTime.size(),
+            *std::min_element(executionTime.begin(), executionTime.end()),
+            *std::max_element(executionTime.begin(), executionTime.end())
+        );
     }
-    printf("%s\n", std::string(160, '-').c_str());
+
+    printf("|----------------------------------|------------------------------------------------------------------|------------|--------------|--------------|--------------|\n\n");
 }
 
 void svp::Profiler::startSession(const char *pSession) {
@@ -74,11 +90,14 @@ bool svp::Profiler::isSessionActive() const {
 
 void svp::Profiler::log(const ProfileResult &profileResult) {
     if(!isSessionActive()) return;
-    if(auto it = mExecutions.find(profileResult.name); it != mExecutions.end()) {
-        it->second.emplace_back(profileResult.elapsedTime);
-    } else {
-        mExecutions[profileResult.name] = {profileResult.elapsedTime};
+    for(auto &execution: mExecutions) {
+        if(execution.first == profileResult.name) {
+            execution.second.push_back(profileResult.elapsedTime);
+            return;
+        }
     }
+    // couldn't find it
+    mExecutions.emplace_back(std::make_pair(profileResult.name, std::vector<double>{profileResult.elapsedTime}));
 }
 
 svp::BenchMarker::BenchMarker(const char *pName) {

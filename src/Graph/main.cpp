@@ -81,12 +81,13 @@ void benchMarkBfs(const svp::CsrGraph &graph, const int32_t sourceNode, const st
     auto iterations = 10;
 #endif
 
+    SVP_START_BENCHMARKING_SESSION("BFS");
     for(const auto &pStrategy: {
         std::shared_ptr<svp::BfsStrategy>(new svp::SerialBfsStrategy()),
         std::shared_ptr<svp::BfsStrategy>(new svp::OpenMP_BfsStrategy()),
         std::shared_ptr<svp::BfsStrategy>(new svp::OpenCL_BfsStrategy()),
     }) {
-        SVP_START_BENCHMARKING_SESSION(pStrategy->toString().c_str(), iterations) {
+        SVP_START_BENCHMARKING_ITERATIONS(iterations) {
             SVP_PRINT_BENCHMARKING_ITERATION();
             auto result = pStrategy->search(graph, sourceNode);
             if(!svp::verifyLineage(graph, result.parents, result.rootNode)) {
@@ -111,11 +112,12 @@ void benchMarkDijkstra(const svp::CsrGraph &graph, const int32_t sourceNode, con
     auto iterations = 10;
 #endif
 
+    SVP_START_BENCHMARKING_SESSION("Dijkstra");
     for(const auto &pStrategy: {
         std::shared_ptr<svp::DijkstraStrategy>(new svp::SerialDijkstraStrategy()),
         std::shared_ptr<svp::DijkstraStrategy>(new svp::OpenCL_DijkstraStrategy()),
     }) {
-        SVP_START_BENCHMARKING_SESSION(pStrategy->toString().c_str(), iterations) {
+        SVP_START_BENCHMARKING_ITERATIONS(iterations) {
             SVP_PRINT_BENCHMARKING_ITERATION();
             auto result = pStrategy->calculate(graph, sourceNode);
             if(!svp::verifyLineage(graph, result.parents, result.rootNode)) {
@@ -140,9 +142,7 @@ int main(int argc, char **argv) {
         "resources/appu.mtx",
         "resources/kron_g500-logn16.mtx",
     }) {
-        printf("%s\n", std::string(160, '=').c_str());
-        printf("Graph: %s\n", file.c_str());
-        printf("%s\n", std::string(160, '=').c_str());
+        printf("Graph: " GREEN("%s\n"), file.c_str());
         auto graph = getCsrGraph((file+".adj").c_str());
         auto sourceNode = 0;
 

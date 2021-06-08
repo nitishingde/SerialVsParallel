@@ -25,7 +25,7 @@ bool svp::verifyLineage(const CsrGraph &graph, const std::vector<int32_t> &paren
 }
 
 svp::WeightedTree<int32_t> svp::SerialBfsStrategy::search(const CsrGraph &graph, int32_t sourceNode) {
-    SVP_PROFILE_FUNC();
+    SVP_PROFILE_SCOPE(toString().c_str());
 
     WeightedTree<int32_t> lineageTree(sourceNode, graph.getVertexCount(), -1);
 
@@ -62,7 +62,7 @@ std::string svp::SerialBfsStrategy::toString() {
 
 // FIXME: slower than serial code
 svp::WeightedTree<int32_t> svp::OpenMP_BfsStrategy::search(const CsrGraph &graph, int32_t sourceNode) {
-    SVP_PROFILE_FUNC();
+    SVP_PROFILE_SCOPE(toString().c_str());
 
     WeightedTree<int32_t> lineageTree(sourceNode, graph.getVertexCount(), -1);
     omp_set_num_threads(omp_get_max_threads());
@@ -124,7 +124,7 @@ svp::OpenCL_BfsStrategy::OpenCL_BfsStrategy() {
 }
 
 svp::WeightedTree<int32_t> svp::OpenCL_BfsStrategy::search(const CsrGraph &graph, int32_t sourceNode) {
-    SVP_PROFILE_FUNC();
+    SVP_PROFILE_SCOPE(toString().c_str());
 
     cl_int status = CL_SUCCESS;
     WeightedTree<int32_t> lineageTree(sourceNode, graph.getVertexCount(), -1);
@@ -238,7 +238,7 @@ std::string svp::OpenCL_BfsStrategy::toString() {
 }
 
 svp::WeightedTree<float> svp::SerialDijkstraStrategy::calculate(const svp::CsrGraph &graph, int32_t sourceNode) {
-    SVP_PROFILE_FUNC();
+    SVP_PROFILE_SCOPE(toString().c_str());
 
     auto &csr = graph.compressedSparseRows;
     auto &edgeList = graph.edgeList;
@@ -297,7 +297,7 @@ svp::OpenCL_DijkstraStrategy::OpenCL_DijkstraStrategy() {
 }
 
 svp::WeightedTree<float> svp::OpenCL_DijkstraStrategy::calculate(const svp::CsrGraph &graph, int32_t sourceNode) {
-    SVP_PROFILE_FUNC();
+    SVP_PROFILE_SCOPE(toString().c_str());
 
     cl_int status = CL_SUCCESS;
     WeightedTree<float> lineageTree(sourceNode, graph.getVertexCount(), FLT_MAX);
