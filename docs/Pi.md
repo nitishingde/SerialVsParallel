@@ -7,6 +7,8 @@
     - [Cache friendly](#cache-friendly)
     - [Atomics](#atomics)
     - [Reduction](#reduction)
+  - [MPI Implementation](#mpi-implementation)
+  - [MPI OpenMP Hybrid Implementation](#mpi-openmp-hybrid-implementation)
 
 - ![eq](https://latex.codecogs.com/png.latex?\int_0^1&space;\frac{4}{1&plus;x^2}&space;\mathrm{d}x&space;=&space;4\int_0^1&space;\mathrm{d}(tan^{-1}x)&space;=&space;\pi)
 - ![eq](https://latex.codecogs.com/png.latex?\sum_{x=0}^{N}&space;\frac{4}{1&plus;(\frac{x}{N})^2}*\frac{1}{N})
@@ -159,8 +161,90 @@ double calculatePi(uint32_t steps) {
 }
 ```
 
+## MPI Implementation
+
+- Like OpenMP, MPI also provides reduce functionality
+- Each process will calculate it's partial sum, and we will sum it up in the end using `MPI_Reduce` api
+- Compile `mpic++ -o pi <source-file>`
+- Run the executable `mpirun -np 4 ./pi`
+
+```cpp
+#include <cstdint>
+#include <mpi/mpi.h>
+
+double calculatePi(uint32_t steps) {
+    double pi = 0.0;
+    double delta = 1.0 / steps;
+    double area = 0.0;
+
+    int32_t processId, noOfProcesses;
+    MPI_Comm_size(MPI_COMM_WORLD, &noOfProcesses);
+    MPI_Comm_rank(MPI_COMM_WORLD, &processId);
+
+    for (size_t step = processId; step < steps; step += noOfProcesses) {
+        double x = (step + 0.5) * delta;
+        area += 4.0 / (1.0 + x*x);
+    }
+    area *= delta;
+
+    MPI_Reduce(&area, &pi, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+
+    return pi;
+}
+
+int main(int argc, char **argv) {
+    if(MPI_Init(&argc, &argv) != MPI_SUCCESS) return 0;
+    printf("Pi = %f\n", calculatePi(1e8));
+    MPI_Finalize();
+
+    return 0;
+}
+```
+
+## MPI OpenMP Hybrid Implementation
+
+- Use openmp to parallelize the partial sum calculation in each process
+- Compile ` mpic++ -o pi -fopenmp <source-file>`
+- Run the executable `mpirun -np 4 ./pi`
+
+```cpp
+#include <cstdint>
+#include <mpi/mpi.h>
+#include <omp.h>
+
+double calculatePi(uint32_t steps) {
+    double pi = 0.0;
+    double delta = 1.0 / steps;
+    double area = 0.0;
+
+    int32_t processId, noOfProcesses;
+    MPI_Comm_size(MPI_COMM_WORLD, &noOfProcesses);
+    MPI_Comm_rank(MPI_COMM_WORLD, &processId);
+
+    omp_set_num_threads(omp_get_max_threads());
+    #pragma omp parallel for reduction(+:area) default(none) firstprivate(steps, delta, processId, noOfProcesses)
+    for (size_t step = processId; step < steps; step += noOfProcesses) {
+        double x = (step + 0.5) * delta;
+        area += 4.0 / (1.0 + x*x);
+    }
+    area *= delta;
+
+    MPI_Reduce(&area, &pi, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+
+    return pi;
+}
+
+int main(int argc, char **argv) {
+    if(MPI_Init(&argc, &argv) != MPI_SUCCESS) return 0;
+    printf("Pi = %f\n", calculatePi(1e8));
+    MPI_Finalize();
+
+    return 0;
+}
+```
+
 TODOs:
 
 - [ ] OpenCL
-- [ ] MPI
-- [ ] MPI OpenMP Hybrid
+- [x] MPI
+- [x] MPI OpenMP Hybrid
