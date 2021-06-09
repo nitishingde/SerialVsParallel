@@ -20,10 +20,13 @@ int main(int argc, char **argv) {
         }
 
         pi /= ITERATIONS;
-        if(0.001 < std::abs(pi-M_PI)) {
-            printf("[Debug] Pi = %.9g, Calculated = %.9g, error margin = " RED("%.9g"), M_PI, pi, std::abs(pi-M_PI));
-            return 0;
-        }
+        printf(
+            "[Debug] Pi = " GREEN("%17.17f") ", Calculated = " BLUE("%17.17f") ", Error margin = " RED("%g") "%%, Strategy = " YELLOW("%s\n"),
+            M_PI,
+            pi,
+            (100*std::abs(pi-M_PI))/M_PI,
+            pPiStrategy->toString().c_str()
+        );
     }
 
     return 0;

@@ -18,9 +18,13 @@ int main(int argc, char **argv) {
         }
 
         pi /= ITERATIONS;
-        if(0.001 < std::abs(pi-M_PI)) {
-            printf("[Debug] Pi = " GREEN("%.9g") ", Calculated = " BLUE("%.9g") ", error margin = " RED("%.9g") "\n", M_PI, pi, pi-M_PI);
-        }
+        printf(
+            "[Debug] Pi = " GREEN("%17.17f") ", Calculated = " BLUE("%17.17f") ", Error margin = " RED("%g") "%%, Strategy = " YELLOW("%s\n"),
+            M_PI,
+            pi,
+            (100*std::abs(pi-M_PI))/M_PI,
+            pPiStrategy->toString().c_str()
+        );
     }
 
     return 0;
