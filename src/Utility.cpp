@@ -179,17 +179,21 @@ void svp::OpenCL_Base::init() {
     mIsInitialised = true;
 }
 
-void svp::OpenCL_Base::loadProgram(const char *pProgramFile) {
+void svp::OpenCL_Base::loadProgramSource(const char *pProgramSourceCode) {
     cl_int status = CL_SUCCESS;
 
     mProgram = cl::Program(
         mContext,
-        svp::readScript(pProgramFile),
+        pProgramSourceCode,
         false,
         &status
     );
     svp::verifyOpenCL_Status(status);
     svp::verifyOpenCL_Status(mProgram.build("-cl-std=CL1.2"));
+}
+
+void svp::OpenCL_Base::loadProgram(const char *pProgramFile) {
+    loadProgramSource(readScript(pProgramFile).c_str());
 }
 
 std::string svp::readScript(const std::string &scriptFilePath) {

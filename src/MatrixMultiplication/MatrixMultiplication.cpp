@@ -2,9 +2,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
-#include <numeric>
 #include <omp.h>
-#include "../Utility.h"
 
 bool svp::DotProductStrategy::verifyMatrices(const svp::Matrix &matrix1, const svp::Matrix &matrix2, const svp::Matrix &result) {
     return
@@ -57,40 +55,13 @@ std::string svp::OpenMP_DotProductStrategy::toString() {
 }
 
 void svp::OpenCL_DotProductStrategy::init() {
-    if(isInitialised) return;
-
+    OpenCL_Base::init();
     cl_int status = CL_SUCCESS;
-
-    mContext = cl::Context(CL_DEVICE_TYPE_GPU, nullptr, nullptr, nullptr, &status);
+    OpenCL_Base::loadProgram("resources/MatrixMultiplication.cl");
+    mKernel = cl::Kernel(mProgram, "calculateDotProduct", &status);
     svp::verifyOpenCL_Status(status);
-
-    auto devices = mContext.getInfo<CL_CONTEXT_DEVICES>(&status);
-    svp::verifyOpenCL_Status(status);
-    mDevice = devices.front();
-
-    // 512 on my machine
-    mWorkGroupSize2D = mDevice.getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>(&status);
-    svp::verifyOpenCL_Status(status);
-    mWorkGroupSize2D = std::floor(std::sqrt(mWorkGroupSize2D));
-#if not NDEBUG
-    printf("[DEBUG] Work Group size: %zu\n", mWorkGroupSize2D);
-#endif
-
-    cl::Program program(
-        mContext,
-        svp::readScript("resources/MatrixMultiplication.cl"),
-        false,
-        &status
-    );
-    svp::verifyOpenCL_Status(status);
-    svp::verifyOpenCL_Status(program.build("-cl-std=CL1.2"));
-    mKernel = cl::Kernel(program, "calculateDotProduct", &status);
-    svp::verifyOpenCL_Status(status);
-
-    mCommandQueue = cl::CommandQueue(mContext, mDevice, 0, &status);
-    svp::verifyOpenCL_Status(status);
-
-    isInitialised = true;
+    // TODO: investigate original(16, 16) vs here(22, 22)
+    mWorkGroupSize2d = std::floor(std::sqrt(mWorkGroupSize1d));
 }
 
 svp::OpenCL_DotProductStrategy::OpenCL_DotProductStrategy() {
@@ -124,13 +95,13 @@ void svp::OpenCL_DotProductStrategy::calculateDotProduct(const svp::Matrix &matr
     verifyOpenCL_Status(mKernel.setArg(4, static_cast<cl_uint>(matrix2.size())));
     verifyOpenCL_Status(mKernel.setArg(5, static_cast<cl_uint>(matrix2[0].size())));
 
-    size_t globalDimX = std::ceil(result.size()/(double)mWorkGroupSize2D) * mWorkGroupSize2D;
-    size_t globalDimY = std::ceil(result[0].size()/(double)mWorkGroupSize2D) * mWorkGroupSize2D;
+    size_t globalDimX = std::ceil(result.size()/(double)mWorkGroupSize2d) * mWorkGroupSize2d;
+    size_t globalDimY = std::ceil(result[0].size()/(double)mWorkGroupSize2d) * mWorkGroupSize2d;
     verifyOpenCL_Status(mCommandQueue.enqueueNDRangeKernel(
         mKernel,
         cl::NullRange,
         cl::NDRange(globalDimX, globalDimY),
-        cl::NDRange(mWorkGroupSize2D, mWorkGroupSize2D),
+        cl::NDRange(mWorkGroupSize2d, mWorkGroupSize2d),
         nullptr,
         nullptr
     ));

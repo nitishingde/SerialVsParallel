@@ -1,6 +1,6 @@
 __kernel void calculatePi(__global float *workGroupArea, __const size_t N, __const size_t steps) {
     // This check is moved after the barrier function call
-    // if(get_global_id(0) > steps) return;
+    // if(steps <= get_global_id(0)) return;
 
     __local float localArea[%workGroupSize%];
 
@@ -11,7 +11,10 @@ __kernel void calculatePi(__global float *workGroupArea, __const size_t N, __con
     // Note: barrier function must be encountered by all work-items in a work-group executing the kernel.
     barrier(CLK_LOCAL_MEM_FENCE);
 
-    if(get_global_id(0) > steps) return;
+    if(steps <= get_global_id(0)) {
+        localArea[localIndex] = 0.0f;
+        return;
+    }
 
     // add all the values in localArea and store it in 'workGroupArea' array for the work-group id
     if(localIndex != 0) return;
