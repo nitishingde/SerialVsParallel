@@ -16,6 +16,8 @@
 ## Serial Implementation
 
 ```cpp
+#include <cstdint>
+
 double calculatePi(uint32_t steps) {
     const double delta = 1.0 / steps;
     double area = 0.0;
@@ -41,6 +43,8 @@ double calculatePi(uint32_t steps) {
 - [Tim Mattson's lecture for reference](https://www.youtube.com/watch?v=OuzYICZUthM&list=PLLX-Q6B8xqZ8n8bwjGdzBJ25X2utwnoEG&index=7)
 
 ```cpp
+#include <cstdint>
+#include <numeric>
 #include <omp.h>
 #include <vector>
 
@@ -69,6 +73,7 @@ double calculatePi(uint32_t steps) {
 - [Tim Mattson's lecture for reference](https://www.youtube.com/watch?v=OuzYICZUthM&list=PLLX-Q6B8xqZ8n8bwjGdzBJ25X2utwnoEG&index=7)
 
 ```cpp
+#include <cstdint>
 #include <omp.h>
 
 #define CACHE_PADDING 8
@@ -107,6 +112,7 @@ double calculatePi(uint32_t steps) {
 - [Tim Mattson's lecture for reference](https://www.youtube.com/watch?v=pLa972Rgl1I&list=PLLX-Q6B8xqZ8n8bwjGdzBJ25X2utwnoEG&index=9)
 
 ```cpp
+#include <cstdint>
 #include <omp.h>
 
 double calculatePi(uint32_t steps) {
@@ -135,6 +141,7 @@ double calculatePi(uint32_t steps) {
 - [Tim Mattson's lecture for reference](https://www.youtube.com/watch?v=8jzHiYo49G0&list=PLLX-Q6B8xqZ8n8bwjGdzBJ25X2utwnoEG&index=12)
 
 ```cpp
+#include <cstdint>
 #include <omp.h>
 
 double calculatePi(uint32_t steps) {
