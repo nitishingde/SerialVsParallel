@@ -139,7 +139,7 @@ double calculatePi(uint32_t steps) {
 ```
 ### Reduction
 
-- Use OpenMP's in built redcution technique
+- Use OpenMP's in built reduction technique
 - [Tim Mattson's lecture for reference](https://www.youtube.com/watch?v=8jzHiYo49G0&list=PLLX-Q6B8xqZ8n8bwjGdzBJ25X2utwnoEG&index=12)
 
 ```cpp
