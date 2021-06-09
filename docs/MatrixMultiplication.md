@@ -4,6 +4,7 @@
   - [Serial Implementation](#serial-implementation)
   - [OpenMP Implementation](#openmp-implementation)
   - [OpenCL Implementation](#opencl-implementation)
+  - [Output](#output)
   - [Home](../README.md#serialvsparallel)
 
 ## Serial Implementation
@@ -85,3 +86,7 @@ __kernel void calculateDotProduct(__global float *matrix1, __global float *matri
     result[x*p + y] = temp;
 }
 ```
+
+## Output
+
+![result](mm.png)

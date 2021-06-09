@@ -9,7 +9,7 @@
     - [Reduction](#reduction)
   - [MPI Implementation](#mpi-implementation)
   - [MPI OpenMP Hybrid Implementation](#mpi-openmp-hybrid-implementation)
-  - [OpenCL Implementation](#opencl-implementation)
+  - [Output](#output)
   - [Home](../README.md#serialvsparallel)
 
 - ![eq](https://latex.codecogs.com/png.latex?\bg_black&space;\fn_jvn&space;\int_0^1&space;\frac{4}{1&plus;x^2}&space;\mathrm{d}x&space;=&space;4\int_0^1&space;\mathrm{d}(tan^{-1}x)&space;=&space;\pi)
@@ -244,6 +244,10 @@ int main(int argc, char **argv) {
     return 0;
 }
 ```
+
+## Output
+
+![result](pi.png)
 
 TODOs:
 
