@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <CL/cl.hpp>
+#include "../Utility.h"
 
 namespace svp {
     class PiStrategy {
@@ -43,17 +44,12 @@ namespace svp {
         std::string toString() override;
     };
 
-    class OpenCL_PiStrategy : public PiStrategy {
+    class OpenCL_PiStrategy : public PiStrategy, private OpenCL_Base {
     private:
-        bool isInitialised = false;
-        size_t mWorkGroupSize {};
-        cl::Context mContext;
-        cl::Device mDevice;
         cl::Kernel mKernel;
-        cl::CommandQueue mCommandQueue;
 
     private:
-        void init();
+        void init() override;
     public:
         explicit OpenCL_PiStrategy();
         double calculatePi(uint32_t steps) override;

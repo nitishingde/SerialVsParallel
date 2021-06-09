@@ -8,7 +8,6 @@
 #include <omp.h>
 #include <regex>
 #include <vector>
-#include "../Utility.h"
 
 #define CACHE_PADDING 8
 
@@ -134,39 +133,13 @@ std::string svp::ReductionOpenMP_PiStrategy::toString() {
 }
 
 void svp::OpenCL_PiStrategy::init() {
-    if(isInitialised) return;
-
+    OpenCL_Base::init();
     cl_int status = CL_SUCCESS;
-
-    mContext = cl::Context(CL_DEVICE_TYPE_GPU, nullptr, nullptr, nullptr, &status);
-    svp::verifyOpenCL_Status(status);
-
-    auto devices = mContext.getInfo<CL_CONTEXT_DEVICES>(&status);
-    svp::verifyOpenCL_Status(status);
-    mDevice = devices.front();
-
-    // 512 on my machine
-    mWorkGroupSize = mDevice.getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>(&status);
-    svp::verifyOpenCL_Status(status);
-#if not NDEBUG
-    printf("[DEBUG] Work Group size: %zu\n", mWorkGroupSize);
-#endif
-
-    cl::Program program(
-        mContext,
-        std::regex_replace(svp::readScript("resources/Pi.cl"), std::regex("%workGroupSize%"), std::to_string(mWorkGroupSize)),
-        false,
-        &status
+    OpenCL_Base::loadProgramSource(
+        std::regex_replace(svp::readScript("resources/Pi.cl"), std::regex("%workGroupSize%"), std::to_string(mWorkGroupSize1d)).c_str()
     );
+    mKernel = cl::Kernel(mProgram, "calculatePi", &status);
     svp::verifyOpenCL_Status(status);
-    svp::verifyOpenCL_Status(program.build("-cl-std=CL1.2"));
-    mKernel = cl::Kernel(program, "calculatePi", &status);
-    svp::verifyOpenCL_Status(status);
-
-    mCommandQueue = cl::CommandQueue(mContext, mDevice, 0, &status);
-    svp::verifyOpenCL_Status(status);
-
-    isInitialised = true;
 }
 
 svp::OpenCL_PiStrategy::OpenCL_PiStrategy() {
@@ -179,7 +152,7 @@ double svp::OpenCL_PiStrategy::calculatePi(uint32_t steps) {
     cl_int status = CL_SUCCESS;
     const double delta = 1.0 / steps;
 
-    size_t N = ceil((double)steps/(double)mWorkGroupSize);
+    size_t N = ceil((double)steps/(double)mWorkGroupSize1d);
 
     std::vector<float> workGroupArea(N, 0.f);
     cl::Buffer workGroupAreaBuffer(
@@ -198,8 +171,8 @@ double svp::OpenCL_PiStrategy::calculatePi(uint32_t steps) {
     svp::verifyOpenCL_Status(mCommandQueue.enqueueNDRangeKernel(
         mKernel,
         cl::NullRange,
-        cl::NDRange(N*mWorkGroupSize),
-        cl::NDRange(mWorkGroupSize),
+        cl::NDRange(N*mWorkGroupSize1d),
+        cl::NDRange(mWorkGroupSize1d),
         nullptr,
         nullptr
     ));
