@@ -4,6 +4,7 @@
   - [Serial Implementation](#serial-implementation)
   - [OpenMP Implementation](#openmp-implementation)
   - [OpenCL Implementation](#opencl-implementation)
+  - [Home](../README.md#serialvsparallel)
 
 ## Serial Implementation
 
