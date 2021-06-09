@@ -69,6 +69,7 @@ namespace svp {
 
     protected:
         virtual void init();
+        void loadProgramSource(const char *pProgramSourceCode);
         void loadProgram(const char *pProgramFile);
     };
 
