@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "../Utility.h"
 
 namespace svp {
     using Matrix = std::vector<std::vector<float>>;
@@ -32,17 +33,12 @@ namespace svp {
         std::string toString() override;
     };
 
-    class OpenCL_DotProductStrategy: public DotProductStrategy {
+    class OpenCL_DotProductStrategy: public DotProductStrategy, private OpenCL_Base {
     private:
-        bool isInitialised = false;
-        size_t mWorkGroupSize2D {};
-        cl::Context mContext;
-        cl::Device mDevice;
         cl::Kernel mKernel;
-        cl::CommandQueue mCommandQueue;
 
     private:
-        void init();
+        void init() override;
     public:
         explicit OpenCL_DotProductStrategy();
         void calculateDotProduct(const Matrix &matrix1, const Matrix &matrix2, Matrix &result) override;
