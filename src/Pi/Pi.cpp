@@ -229,7 +229,6 @@ double svp::MPI_PiStrategy::calculatePi(uint32_t steps) {
     int32_t processId, noOfProcesses;
     MPI_Comm_size(MPI_COMM_WORLD, &noOfProcesses);
     MPI_Comm_rank(MPI_COMM_WORLD, &processId);
-    MPI_Bcast(&steps, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
 #if not NDEBUG
     printf("[Debug] No of processes = %d\n", noOfProcesses);
@@ -261,7 +260,6 @@ double svp::HybridMpiOpenMP_PiStrategy::calculatePi(uint32_t steps) {
     int32_t processId, noOfProcesses;
     MPI_Comm_size(MPI_COMM_WORLD, &noOfProcesses);
     MPI_Comm_rank(MPI_COMM_WORLD, &processId);
-    MPI_Bcast(&steps, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
 #if not NDEBUG
     printf("[Debug] No of processes = %d\n", noOfProcesses);
