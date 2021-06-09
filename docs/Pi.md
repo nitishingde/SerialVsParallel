@@ -9,11 +9,12 @@
     - [Reduction](#reduction)
   - [MPI Implementation](#mpi-implementation)
   - [MPI OpenMP Hybrid Implementation](#mpi-openmp-hybrid-implementation)
+  - [OpenCL Implementation](#opencl-implementation)
 
-- ![eq](https://latex.codecogs.com/png.latex?\int_0^1&space;\frac{4}{1&plus;x^2}&space;\mathrm{d}x&space;=&space;4\int_0^1&space;\mathrm{d}(tan^{-1}x)&space;=&space;\pi)
-- ![eq](https://latex.codecogs.com/png.latex?\sum_{x=0}^{N}&space;\frac{4}{1&plus;(\frac{x}{N})^2}*\frac{1}{N})
+- ![eq](https://latex.codecogs.com/png.latex?\bg_black&space;\fn_jvn&space;\int_0^1&space;\frac{4}{1&plus;x^2}&space;\mathrm{d}x&space;=&space;4\int_0^1&space;\mathrm{d}(tan^{-1}x)&space;=&space;\pi)
+- ![eq](https://latex.codecogs.com/png.latex?\bg_black&space;\fn_jvn&space;\sum_{x=0}^{N}\frac{4}{1&plus;(\frac{x}{N})^2}*\frac{1}{N})
   - N = steps
-- We are using this particular integral over others because of the simplicity of the summation. for e.g. we could have used ![eq](https://latex.codecogs.com/png.latex?4\int_0^1&space;\sqrt{1-x^2}) (area under the circle) but this involves finding squareroots, which is another non trival task in iteself.
+- We are using this particular integral over others because of the simplicity of the summation. for e.g. we could have used ![eq](https://latex.codecogs.com/png.latex?\inline&space;\bg_black&space;\fn_jvn&space;4\int_0^1&space;\sqrt{1-x^2}) (area under the circle) but this involves finding squareroots, which is another non trival task in itself.
 
 ## Serial Implementation
 
