@@ -34,7 +34,7 @@ double svp::OpenMP_PiStrategy::calculatePi(uint32_t steps) {
     SVP_PROFILE_SCOPE(toString().c_str());
 
     const double delta = 1.0 / steps;
-    std::vector<double> area(omp_get_max_threads()*2, 0.0);
+    std::vector<double> area(omp_get_max_threads(), 0.0);
 
     omp_set_num_threads(omp_get_max_threads());
     #pragma omp parallel default(none) firstprivate(steps, delta) shared(area)
