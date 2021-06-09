@@ -1,5 +1,8 @@
 # SerialVsParallel
 
+[![nitishingde - SerialVsParallel](https://img.shields.io/static/v1?label=nitishingde&message=SerialVsParallel&color=blue&logo=github)](https://github.com/nitishingde/SerialVsParallel)
+[![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE.md)
+
 - [SerialVsParallel](#serialvsparallel)
   - [Projects](#projects)
   - [Reference materials](#reference-materials)
