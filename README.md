@@ -4,8 +4,60 @@
 [![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE.md)
 
 - [SerialVsParallel](#serialvsparallel)
+  - [About](#about)
+  - [Brief Overview](#brief-overview)
+    - [OpenMP](#openmp)
+    - [MPI](#mpi)
+    - [OpenCL](#opencl)
   - [Projects](#projects)
   - [Reference materials](#reference-materials)
+
+## About
+
+> TL;RD: Repository of examples of parallel algorithms
+
+The objective of this project is to help write parallel algorithms using OpenMP, MPI and OpenCL.
+A complete knowledge of these libraries can be found online, and hence won't be discussed here. You can find the resources linked at the [bottom of this page](#reference-materials).
+
+Here we will look more on use case side of things. This is best achieved by leading through examples. First a serial code for the algorithm will be provided, and then we will modify the serial code accordingly to get a parallelized version using a combination of OpenMP, MPI and OpenCL.
+
+Please note that the code for the parallel algorithms isn't guaranteed to be the best/most efficient. Also, most of the programming language related optimizations are avoided, since that is not the objective here (they are often times ugly and impairs readability). For the sake of clarity and better understanding, the code is tried to be kept as simple as possible.
+
+## Brief Overview
+
+### OpenMP
+
+- Open Multi-Processing
+- An Application Program Interface (API) that may be used to explicitly direct multi-threaded, shared memory parallelism.
+- Comprised of three primary API components:
+  - Compiler Directives
+  - Runtime Library Routines
+  - Environment Variables
+- OpenMP Is Not:
+  - Meant for distributed memory parallel systems (by itself)
+  - Necessarily implemented identically by all vendors
+  - Guaranteed to make the most efficient use of shared memory
+  - Required to check for data dependencies, data conflicts, race conditions, deadlocks, or code sequences that cause a program to be classified as non-conforming
+  - Designed to handle parallel I/O.
+  - The programmer is responsible for synchronizing input and output.
+
+### MPI
+
+- Message Passing Interface
+- MPI is a specification for the developers and users of message passing libraries. By itself, it is NOT a library - but rather the specification of what such a library should be.
+- MPI primarily addresses the message-passing parallel programming model: data is moved from the address space of one process to that of another process through cooperative operations on each process.
+- Simply stated, the goal of the Message Passing Interface is to provide a widely used standard for writing message passing programs. The interface attempts to be:
+  - Practical
+  - Portable
+  - Efficient
+  - Flexible
+
+### OpenCL
+
+- Open Computing Language
+- It is a framework for writing programs that execute across heterogeneous platforms consisting of central processing units (CPUs), graphics processing units (GPUs), digital signal processors (DSPs), field-programmable gate arrays (FPGAs) and other processors or hardware accelerators.
+- SIMD processing.
+
 
 ## Projects
 - [Pi calculation](docs/Pi.md)
