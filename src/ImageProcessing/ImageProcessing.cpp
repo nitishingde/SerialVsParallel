@@ -26,7 +26,7 @@ cv::Mat svp::NNI_Serial::transform(const cv::Mat &image, float scaleX, float sca
 }
 
 std::string svp::NNI_Serial::toString() {
-    return "Scaling image using Nearest Neighbour Interpolation using serial code";
+    return "Nearest Neighbour Interpolation using serial code";
 }
 
 svp::NNI_OpenCL::NNI_OpenCL() {
@@ -93,7 +93,7 @@ cv::Mat svp::NNI_OpenCL::transform(const cv::Mat &image, float scaleX, float sca
 }
 
 std::string svp::NNI_OpenCL::toString() {
-    return "Scaling image using Nearest Neighbour Interpolation using OpenCL";
+    return "Nearest Neighbour Interpolation using OpenCL";
 }
 
 void svp::NNI_OpenCL2::init() {
@@ -174,5 +174,5 @@ cv::Mat svp::NNI_OpenCL2::transform(const cv::Mat &image, float scaleX, float sc
 }
 
 std::string svp::NNI_OpenCL2::toString() {
-    return "Scaling image using Nearest Neighbour Interpolation using OpenCL with inbuilt image functionality";
+    return "Nearest Neighbour Interpolation using OpenCL inbuilt img sampler";
 }
