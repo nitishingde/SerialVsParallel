@@ -55,6 +55,7 @@ add_executable(Prime
 )
 target_link_libraries(Prime
     PUBLIC
+        OpenMP::OpenMP_CXX
         Utility
 )
 

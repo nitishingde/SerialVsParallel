@@ -18,7 +18,8 @@ int main() {
     const uint32_t LIMIT = 1e7;
     auto primes = get1stMillionPrimes();
     for(auto &pStrategy: {
-        std::shared_ptr<svp::PrimeMetaDataStrategy>(new svp::SerialPrimeMetaDataStrategy())
+        std::shared_ptr<svp::PrimeMetaDataStrategy>(new svp::SerialPrimeMetaDataStrategy()),
+        std::shared_ptr<svp::PrimeMetaDataStrategy>(new svp::OpenMP_PrimeMetaDataStrategy()),
     }) {
         SVP_START_BENCHMARKING_ITERATIONS(10) {
             SVP_PRINT_BENCHMARKING_ITERATION();
