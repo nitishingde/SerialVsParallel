@@ -73,12 +73,18 @@ Image processing: Nearest neighbour interpolation image scaling (nni)|Yes|Yes|Ye
 Graph: Breadth first search (bfs)|Yes|Yes|Yes|-|-
 Graph: Single source shortest path (sssp)|Yes|-|Yes|-|-
 
+---
+
 ## Reference materials
 
 - OpenMP
+  - [OpenMP tutorials](https://www.openmp.org/resources/tutorials-articles/)
   - [Tim Mattson's yt playlist](https://www.youtube.com/watch?v=nE-xN4Bf8XI&list=PLLX-Q6B8xqZ8n8bwjGdzBJ25X2utwnoEG)
   - [Lawrence Livermore National Laboratory](https://hpc.llnl.gov/training/tutorials/openmp-tutorial)
   - [Jaka's corner](http://jakascorner.com/blog/)
+- MPI
+  - [Lawrence Livermore National Laboratory](https://hpc-tutorials.llnl.gov/mpi/)
+  - [MPI Tutorial](https://mpitutorial.com/tutorials/)
 - OpenCL
   - [Texas Instrumentation docs](http://downloads.ti.com/mctools/esd/docs/opencl/index.html)
   - [Leonardo Araujo Santos blog](https://leonardoaraujosantos.gitbook.io/opencl/)
@@ -87,5 +93,5 @@ Graph: Single source shortest path (sssp)|Yes|-|Yes|-|-
   - [UC Berkley CS 267](https://people.eecs.berkeley.edu/~demmel/cs267_Spr15/)
   - [UC Berkley CS 267 yt playlist](https://www.youtube.com/playlist?list=PLkFD6_40KJIyX8nEjk6oTLWohdVhjjP3X)
 - FAQs
-  - [Determine max global work group size based on device memory in OpenCL? ](https://stackoverflow.com/questions/23017005/determine-max-global-work-group-size-based-on-device-memory-in-opencl)
+  - [Determine max global work group size based on device memory in OpenCL?](https://stackoverflow.com/questions/23017005/determine-max-global-work-group-size-based-on-device-memory-in-opencl)
   - [Questions about global and local work size](https://stackoverflow.com/questions/3957125/questions-about-global-and-local-work-size)
