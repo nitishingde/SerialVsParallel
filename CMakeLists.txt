@@ -79,6 +79,7 @@ target_link_libraries(ImageProcessing
     PUBLIC
         OpenCL
         ${OpenCV_LIBS}
+        OpenMP::OpenMP_CXX
         Utility
 )
 add_dependencies(ImageProcessing CopyScripts)
