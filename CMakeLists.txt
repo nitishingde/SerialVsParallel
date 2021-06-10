@@ -49,6 +49,15 @@ target_link_libraries(MPI_Pi
         MPI::MPI_CXX
 )
 
+add_executable(Prime
+        src/Prime/main.cpp
+        src/Prime/Prime.cpp src/Prime/Prime.h
+)
+target_link_libraries(Prime
+    PUBLIC
+        Utility
+)
+
 add_executable(OpenCLBasics
         src/OpenCLBasics/main.cpp
 )
