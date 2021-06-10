@@ -13,10 +13,11 @@
   - [Output](#output)
   - [Home](../README.md#serialvsparallel)
 
-- ![eq](https://latex.codecogs.com/png.latex?\bg_black&space;\fn_jvn&space;\int_0^1&space;\frac{4}{1&plus;x^2}&space;\mathrm{d}x&space;=&space;4\int_0^1&space;\mathrm{d}(tan^{-1}x)&space;=&space;\pi)
-- ![eq](https://latex.codecogs.com/png.latex?\bg_black&space;\fn_jvn&space;\sum_{x=0}^{N}\frac{4}{1&plus;(\frac{x}{N})^2}*\frac{1}{N})
-  - N = steps
-- We are using this particular integral over others because of the simplicity of the summation. for e.g. we could have used ![eq](https://latex.codecogs.com/png.latex?\inline&space;\bg_black&space;\fn_jvn&space;4\int_0^1&space;\sqrt{1-x^2}) (area under the circle) but this involves finding squareroots, which is another non trival task in itself.
+- ![eq](https://latex.codecogs.com/png.latex?\dpi{100}\fn_jvn&space;{\color{Gray}&space;\int_0^1&space;\frac{4}{1&plus;x^2}&space;\mathrm{d}x&space;=&space;4\int_0^1&space;\mathrm{d}(tan^{-1}x)&space;=&space;\pi})
+- Also, we can write the integral as an approximate summation of the form:
+  - ![eq](https://latex.codecogs.com/png.latex?\dpi{100}\fn_jvn&space;{\color{Gray}&space;\int_0^1&space;\frac{4}{1&plus;x^2}&space;\mathrm{d}x&space;=&space;(\sum_{x=0}^{steps}\frac{4}{1&plus;(\frac{x}{steps})^2}*\frac{1}{steps})&space;\approx&space;\pi})
+  - We implement this summation to approximately calculate the value of pi.
+- We are using this particular integral over others because of the simplicity of the summation. for e.g. we could have used ![eq](https://latex.codecogs.com/png.latex?\inline&space;\fn_jvn&space;{\color{Gray}&space;4\int_0^1&space;\sqrt{1-x^2}) (area under the circle) but this involves finding squareroots, which is another non trival task in itself.
 
 ## Serial Implementation
 
