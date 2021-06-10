@@ -1,5 +1,5 @@
 #include "ImageProcessing.h"
-#include <chrono>
+#include <omp.h>
 
 bool svp::cmp(const cv::Mat &image1, const cv::Mat &image2) {
     return
@@ -26,7 +26,27 @@ cv::Mat svp::NNI_Serial::transform(const cv::Mat &image, float scaleX, float sca
 }
 
 std::string svp::NNI_Serial::toString() {
-    return "Scaling image using Nearest Neighbour Interpolation using serial code";
+    return "Nearest Neighbour Interpolation using serial code";
+}
+
+cv::Mat svp::NNI_OpenMP::transform(const cv::Mat &image, float scaleX, float scaleY) {
+    SVP_PROFILE_SCOPE(toString().c_str());
+
+    auto channelSize = image.channels();
+    cv::Mat scaledImage(std::round(image.rows * scaleY), std::round(image.cols * scaleX), CV_8UC(channelSize));
+    #pragma omp parallel for default(none) firstprivate(scaleX, scaleY) shared(image, scaledImage)
+    for(int32_t scaledI = 0; scaledI < scaledImage.rows; ++scaledI) {
+        for(int32_t scaledJ = 0; scaledJ < scaledImage.cols; ++scaledJ) {
+            //4 "8-bit" channels -> 32 bits
+            scaledImage.at<uint32_t>(scaledI, scaledJ) = image.at<uint32_t>(scaledI/scaleY, scaledJ/scaleX);
+        }
+    }
+
+    return scaledImage;
+}
+
+std::string svp::NNI_OpenMP::toString() {
+    return "Nearest Neighbour Interpolation using OpenMP";
 }
 
 svp::NNI_OpenCL::NNI_OpenCL() {
@@ -93,7 +113,7 @@ cv::Mat svp::NNI_OpenCL::transform(const cv::Mat &image, float scaleX, float sca
 }
 
 std::string svp::NNI_OpenCL::toString() {
-    return "Scaling image using Nearest Neighbour Interpolation using OpenCL";
+    return "Nearest Neighbour Interpolation using OpenCL";
 }
 
 void svp::NNI_OpenCL2::init() {
@@ -174,5 +194,5 @@ cv::Mat svp::NNI_OpenCL2::transform(const cv::Mat &image, float scaleX, float sc
 }
 
 std::string svp::NNI_OpenCL2::toString() {
-    return "Scaling image using Nearest Neighbour Interpolation using OpenCL with inbuilt image functionality";
+    return "Nearest Neighbour Interpolation using OpenCL inbuilt img sampler";
 }

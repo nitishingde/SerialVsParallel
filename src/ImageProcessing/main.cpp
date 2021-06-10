@@ -13,6 +13,7 @@ int main(int argc, char **argv) {
     SVP_START_BENCHMARKING_SESSION("Image scaling");
     for(auto [pImageScalingStrategy, interpolationFlag]: {
         std::make_tuple(std::shared_ptr<svp::ImageScalingStrategy>(new svp::NNI_Serial()), cv::InterpolationFlags::INTER_NEAREST),
+        std::make_tuple(std::shared_ptr<svp::ImageScalingStrategy>(new svp::NNI_OpenMP()), cv::InterpolationFlags::INTER_NEAREST),
         std::make_tuple(std::shared_ptr<svp::ImageScalingStrategy>(new svp::NNI_OpenCL()), cv::InterpolationFlags::INTER_NEAREST),
         std::make_tuple(std::shared_ptr<svp::ImageScalingStrategy>(new svp::NNI_OpenCL2()), cv::InterpolationFlags::INTER_NEAREST),
     }) {

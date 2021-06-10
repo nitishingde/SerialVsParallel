@@ -22,6 +22,12 @@ namespace svp {
         std::string toString() override;
     };
 
+    class NNI_OpenMP: public ImageScalingStrategy {
+    public:
+        cv::Mat transform(const cv::Mat &image, float scaleX, float scaleY) override;
+        std::string toString() override;
+    };
+
     class NNI_OpenCL: public ImageScalingStrategy, private OpenCL_Base {
     private:
         cl::Kernel mKernel;
