@@ -137,13 +137,15 @@ void benchMarkDijkstra(const svp::CsrGraph &graph, const int32_t sourceNode, con
 
 int main(int argc, char **argv) {
     for(auto &file: std::vector<std::string> {
-        "resources/ca2010.mtx",
-        "resources/cage13.mtx",
         "resources/appu.mtx",
         "resources/kron_g500-logn16.mtx",
+        "resources/cage13.mtx",
+        "resources/ca2010.mtx",
     }) {
         printf("Graph: " GREEN("%s\n"), file.c_str());
         auto graph = getCsrGraph((file+".adj").c_str());
+        setlocale(LC_NUMERIC, "");
+        printf("Nodes: " BLUE("%'zu") " Edges: " RED("%'zu\n"), graph.getVertexCount(), graph.edgeList.size());
         auto sourceNode = 0;
 
         auto bfsCheck = readAnswer((file+".ans").c_str());
