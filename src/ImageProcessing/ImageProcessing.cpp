@@ -32,6 +32,7 @@ std::string svp::NNI_Serial::toString() {
 cv::Mat svp::NNI_OpenMP::transform(const cv::Mat &image, float scaleX, float scaleY) {
     SVP_PROFILE_SCOPE(toString().c_str());
 
+    omp_set_num_threads(omp_get_max_threads());
     auto channelSize = image.channels();
     cv::Mat scaledImage(std::round(image.rows * scaleY), std::round(image.cols * scaleX), CV_8UC(channelSize));
     #pragma omp parallel for default(none) firstprivate(scaleX, scaleY) shared(image, scaledImage)

@@ -321,7 +321,7 @@ svp::MPI_GlobalLockGuard::MPI_GlobalLockGuard(int32_t argc, char **argv) {
     int32_t flag = false;
     if(auto status = MPI_Initialized(&flag); status != MPI_SUCCESS or flag == false) {
         if(MPI_Init(&argc, &argv) == MPI_SUCCESS) {
-            if(svp::isMpiRootPid()) printf("[MPI_GlobalLockGuard] MPI initialized\n\n");
+            if(svp::isMpiRootPid()) printf("[MPI_GlobalLockGuard] " GREEN("MPI initialized\n"));
         }
     }
 #endif
@@ -332,7 +332,7 @@ svp::MPI_GlobalLockGuard::~MPI_GlobalLockGuard() {
     int32_t flag = false;
     if(auto status = MPI_Initialized(&flag); status == MPI_SUCCESS and flag) {
         if(MPI_Finalize() == MPI_SUCCESS) {
-            if(svp::isMpiRootPid()) printf("[MPI_GlobalLockGuard] MPI exited\n\n");
+            if(svp::isMpiRootPid()) printf("[MPI_GlobalLockGuard] " RED("MPI exited\n"));
         }
     }
 #endif

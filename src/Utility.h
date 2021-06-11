@@ -13,6 +13,7 @@
 #define ANSI_COLOR_MAGENTA "\x1b[35m"
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
+#define ANSI_CLEAR_LINE    "\33[2K"
 
 #define RED(x) ANSI_COLOR_RED x ANSI_COLOR_RESET
 #define GREEN(x) ANSI_COLOR_GREEN x ANSI_COLOR_RESET
@@ -116,7 +117,7 @@ namespace svp {
     for(uint32_t svp_iteration = 0, svp_iterations = iterations; svp_iteration < svp_iterations; ++svp_iteration)
 
     #define SVP_PRINT_BENCHMARKING_ITERATION()                      \
-    printf("Iteration : %u/%u\r", svp_iteration+1, svp_iterations); \
+    printf(ANSI_CLEAR_LINE "Iteration : %u/%u\r", svp_iteration+1, svp_iterations); \
     fflush(stdout)
 
     #define SVP_PROFILE_SCOPE(name) svp::Timer CONCAT_(timer, __LINE__)(name)

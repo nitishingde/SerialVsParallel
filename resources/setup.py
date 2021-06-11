@@ -158,7 +158,15 @@ def progress(block_num, block_size, total_size):
     print(f"Downloading: {(100 * block_num * block_size) // total_size}%", end='\r')
 
 
+def setup_primes():
+    compressed_file = tarfile.open('primes1e6.tar.xz')
+    compressed_file.extractall()
+    compressed_file.close()
+
+
 if __name__ == '__main__':
+    setup_primes()
+
     files = {
         'appu.mtx': {
             'directed': True,

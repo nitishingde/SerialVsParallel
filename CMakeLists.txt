@@ -37,16 +37,14 @@ target_link_libraries(Pi
 )
 add_dependencies(Pi CopyScripts)
 
-add_executable(MPI_Pi
-        src/Pi/mpi_main.cpp
-        src/Pi/Pi.cpp src/Pi/Pi.h
+add_executable(Prime
+        src/Prime/main.cpp
+        src/Prime/Prime.cpp src/Prime/Prime.h
 )
-target_link_libraries(MPI_Pi
+target_link_libraries(Prime
     PUBLIC
         OpenMP::OpenMP_CXX
-        OpenCL
         Utility
-        MPI::MPI_CXX
 )
 
 add_executable(OpenCLBasics
