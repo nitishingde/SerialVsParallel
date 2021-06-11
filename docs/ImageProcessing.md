@@ -66,7 +66,7 @@ cv::Mat transform(const cv::Mat &image, float scaleX, float scaleY) {
 
 ### OpenCL Implementation
 
-- Work-item: the body of inner most loop, i.e., `scaledImage.at<uint32_t>(scaledI, scaledJ) = image.at<uint32_t>(scaledI/scaleY, scaledJ/scaleX);`
+- Work-item: the body of innermost loop, i.e., `scaledImage.at<uint32_t>(scaledI, scaledJ) = image.at<uint32_t>(scaledI/scaleY, scaledJ/scaleX);`
 - Global work size dimensions: dimension(scaled image) at the least or bigger
 - Local work size dimensions: no restrictions.
 - We have implemented the kernel in 2 ways.

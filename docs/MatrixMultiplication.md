@@ -63,7 +63,7 @@ void calculateDotProduct(const Matrix &matrix1, const Matrix &matrix2, Matrix &r
 
 ## OpenCL Implementation
 
-- work-item: the whole innermost for loop
+- Work-item: the whole innermost for loop
   - why not just the body of the innermost loop, i.e., just the `result[i][j] += matrix1[i][k] * matrix2[k][j];`? Because in that case, we need to make atomic writes at `result[i][j]`, and OpenCL 1.2 specs doesn't support atomic_add for floats 
 - Global work size dimensions: dimension(resultant matrix) at the least or bigger
 - Local work size dimensions: no restrictions.
