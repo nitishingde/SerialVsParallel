@@ -35,6 +35,12 @@ namespace svp {
         PrimeMetaData calculateBiggestPrime(const uint32_t limit) override;
         std::string toString() override;
     };
+
+    class HybridMpiOpenMP_PrimeMetaDataStrategy: public PrimeMetaDataStrategy {
+    public:
+        PrimeMetaData calculateBiggestPrime(const uint32_t limit) override;
+        std::string toString() override;
+    };
 }
 
 

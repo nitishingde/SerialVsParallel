@@ -51,6 +51,7 @@ int main(int argc, char **argv) {
         benchMark(
             {
                 std::shared_ptr<svp::PrimeMetaDataStrategy>(new svp::MPI_PrimeMetaDataStrategy()),
+                std::shared_ptr<svp::PrimeMetaDataStrategy>(new svp::HybridMpiOpenMP_PrimeMetaDataStrategy()),
             },
             primes
         );
