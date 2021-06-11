@@ -10,6 +10,7 @@
     - [MPI](#mpi)
     - [OpenCL](#opencl)
   - [Projects](#projects)
+  - [How to build and run the projects?](#how-to-build-and-run-the-projects)
   - [Reference materials](#reference-materials)
 
 ## About
@@ -74,6 +75,18 @@ Matrix Multiplication|[Yes](docs/MatrixMultiplication.md#serial-implementation)|
 Image processing: Nearest neighbour interpolation image scaling (nni)|[Yes](docs/ImageProcessing.md#serial-implementation)|[Yes](docs/ImageProcessing.md#openmp-implementation)|-|-|[Yes](docs/ImageProcessing.md#opencl-implementation)
 Graph: Breadth first search (bfs)|Yes|Yes|-|-|Yes
 Graph: Single source shortest path (sssp)|Yes|-|-|-|Yes
+
+## How to build and run the projects?
+
+- Prerequisites:
+  - [CMake installation guide](https://cmake.org/install/).
+  - [OpenCV installation guide](https://docs.opencv.org/master/df/d65/tutorial_table_of_content_introduction.html).
+  - [MPI, preferably MPICH installation guide here](https://mpitutorial.com/tutorials/installing-mpich2/).
+  - OpenCL
+- After finishing up up with the prerequisites, try running the `setup.sh` script.
+  - This will download and setup some graph datasets and other files required for testing.
+- To build the projects, just run the `build.sh` script.
+- To run/execute the projects, use the `run.sh` script. Just execute the `run.sh` 1st to get help on how to use the script.
 
 ---
 
