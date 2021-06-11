@@ -61,6 +61,7 @@ Please note that the code for the parallel algorithms isn't guaranteed to be the
 
 ## Projects
 - [Pi calculation](docs/Pi.md)
+- [Prime](docs/Prime.md)
 - [Matrix Multiplication](docs/MatrixMultiplication.md)
 - [Image processing](docs/ImageProcessing.md)
 - [Graph](docs/Graph.md)
@@ -68,6 +69,7 @@ Please note that the code for the parallel algorithms isn't guaranteed to be the
 Project|Serial|OpenMP|MPI|MPI+OpenMP|OpenCL
 -|-|-|-|-|-
 Pi calculation|[Yes](docs/Pi.md#serial-implementation)|[Yes](docs/Pi.md#openmp-implementation)|[Yes](docs/Pi.md#mpi-implementation)|[Yes](docs/Pi.md#mpi-openmp-hybrid-implementation)|[Yes](docs/Pi.md#opencl-implementation)
+Prime: Get the largest prime number and count(prime) below a given upper limit.|Yes|Yes|Yes|Yes|-
 Matrix Multiplication|[Yes](docs/MatrixMultiplication.md#serial-implementation)|[Yes](docs/MatrixMultiplication.md#openmp-implementation)|-|-|[Yes](docs/MatrixMultiplication.md#opencl-implementation)
 Image processing: Nearest neighbour interpolation image scaling (nni)|[Yes](docs/ImageProcessing.md#serial-implementation)|[Yes](docs/ImageProcessing.md#openmp-implementation)|-|-|[Yes](docs/ImageProcessing.md#opencl-implementation)
 Graph: Breadth first search (bfs)|Yes|Yes|-|-|Yes
