@@ -5,7 +5,8 @@
     - [Serial Implementation](#serial-implementation)
     - [OpenMP Implementation](#openmp-implementation)
     - [OpenCL Implementation](#opencl-implementation)
-    - [Home](../README.md#serialvsparallel)
+  - [Output](#output)
+  - [Home](../README.md#serialvsparallel)
 
 
 ## Nearest neighbour interpolation image scaling
@@ -123,3 +124,7 @@ __kernel void nearestNeighbourInterpolation2(
     write_imageui(scaledImage, scaledImageCoord, pixel);
 }
 ```
+
+## Output
+
+![result](ImageProcessing.png)
