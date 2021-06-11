@@ -8,7 +8,8 @@ fi
 usage='sh ./run.sh <id>
 1.1> Pi without mpi
 1.2> Pi with mpi
-  2> Prime
+2.1> Prime without mpi
+2.2> Prime with mpi
   3> Matrix Multiplication
   4> Image Processing
   5> Graph
@@ -33,9 +34,14 @@ for option in $@ ; do
     mpiexec.mpich -np 2 build/release/Pi --use-mpi
     commandArgFound=true
     ;;
-  2)
-    echo "> Prime"
+  2.1)
+    echo "> Prime without mpi"
     build/release/Prime
+    commandArgFound=true
+    ;;
+  2.2|2)
+    echo "> Prime with mpi"
+    mpiexec.mpich -np 2 build/release/Prime --use-mpi
     commandArgFound=true
     ;;
   3)
