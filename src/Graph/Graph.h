@@ -101,6 +101,12 @@ namespace svp {
         std::vector<std::vector<float>> calculate(const CsrGraph &graph) override;
         std::string toString() override;
     };
+
+    class OpenMP_FloydWarshallStrategy: public FloydWarshallStrategy {
+    public:
+        std::vector<std::vector<float>> calculate(const CsrGraph &graph) override;
+        std::string toString() override;
+    };
 }
 
 #endif //SERIALVSPARALLEL_GRAPH_H

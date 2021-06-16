@@ -151,6 +151,7 @@ void benchmarkFloydWarshall(const svp::CsrGraph &graph, const std::vector<std::v
     SVP_START_BENCHMARKING_SESSION("Floyd Warshall");
     for(const auto &pStrategy: {
         std::shared_ptr<svp::FloydWarshallStrategy>(new svp::SerialFloydWarshallStrategy()),
+        std::shared_ptr<svp::FloydWarshallStrategy>(new svp::OpenMP_FloydWarshallStrategy()),
     }) {
         SVP_START_BENCHMARKING_ITERATIONS(iterations) {
             SVP_PRINT_BENCHMARKING_ITERATION();
