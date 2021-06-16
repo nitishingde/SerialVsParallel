@@ -459,3 +459,33 @@ svp::WeightedTree<float> svp::OpenCL_DijkstraStrategy::calculate(const svp::CsrG
 std::string svp::OpenCL_DijkstraStrategy::toString() {
     return "Dijkstra's algorithm using OpenCL";
 }
+
+std::vector<std::vector<float>> svp::SerialFloydWarshallStrategy::calculate(const CsrGraph &graph) {
+    SVP_PROFILE_SCOPE(toString().c_str());
+
+    const auto &csr = graph.compressedSparseRows;
+    const auto &edgeList = graph.edgeList;
+    const auto &weightList = graph.weightList;
+
+    auto apsp = std::vector(graph.getVertexCount(), std::vector(graph.getVertexCount(), std::numeric_limits<float>::infinity()));
+    for(uint32_t node = 0; node < graph.getVertexCount(); ++node) {
+        for(uint32_t i = csr[node]; i < csr[node+1]; ++i) {
+            apsp[node][edgeList[i]] = weightList[i];
+        }
+        apsp[node][node] = 0;
+    }
+
+    for(uint32_t k = 0; k < apsp.size(); ++k) {
+        for(uint32_t i = 0; i < apsp.size(); ++i) {
+            for(uint32_t j = 0; j < apsp.size(); ++j) {
+                apsp[i][j] = std::min(apsp[i][j], apsp[i][k] + apsp[k][j]);
+            }
+        }
+    }
+
+    return apsp;
+}
+
+std::string svp::SerialFloydWarshallStrategy::toString() {
+    return "Floyd Warshall algorithm using serial code";
+}

@@ -88,6 +88,19 @@ namespace svp {
         WeightedTree<float> calculate(const CsrGraph &graph, int32_t sourceNode) override;
         std::string toString() override;
     };
+
+    class FloydWarshallStrategy {
+    public:
+        virtual ~FloydWarshallStrategy() = default;
+        virtual std::vector<std::vector<float>> calculate(const CsrGraph &graph) = 0;
+        virtual std::string toString() = 0;
+    };
+
+    class SerialFloydWarshallStrategy: public FloydWarshallStrategy {
+    public:
+        std::vector<std::vector<float>> calculate(const CsrGraph &graph) override;
+        std::string toString() override;
+    };
 }
 
 #endif //SERIALVSPARALLEL_GRAPH_H

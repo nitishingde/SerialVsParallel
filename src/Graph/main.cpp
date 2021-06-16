@@ -141,8 +141,36 @@ void benchMarkDijkstra(const svp::CsrGraph &graph, const int32_t sourceNode, con
     }
 }
 
+void benchmarkFloydWarshall(const svp::CsrGraph &graph, const std::vector<std::vector<float>> &check) {
+#if not NDEBUG
+    auto iterations = 1;
+#else
+    auto iterations = 10;
+#endif
+
+    SVP_START_BENCHMARKING_SESSION("Floyd Warshall");
+    for(const auto &pStrategy: {
+        std::shared_ptr<svp::FloydWarshallStrategy>(new svp::SerialFloydWarshallStrategy()),
+    }) {
+        SVP_START_BENCHMARKING_ITERATIONS(iterations) {
+            SVP_PRINT_BENCHMARKING_ITERATION();
+            auto result = pStrategy->calculate(graph);
+            for(uint32_t i = 0; i < result.size(); ++i) {
+                for(uint32_t j = 0; j < result[i].size(); ++j) {
+                    if(0.001 < std::abs(result[i][j] - check[i][j])) {
+                        fprintf(stderr, "[Debug] Failed! size = %zu, node = %u, expected = %f, calculated = %f\n", check.size(), i, check[i][j], result[i][j]);
+                        return;
+                    }
+                }
+            }
+        }
+    }
+}
+
 int main(int argc, char **argv) {
     for(auto &file: std::vector<std::string> {
+        "resources/gre_512.mtx",
+        "resources/cage8.mtx",
         "resources/appu.mtx",
         "resources/kron_g500-logn16.mtx",
         "resources/cage13.mtx",
@@ -154,12 +182,27 @@ int main(int argc, char **argv) {
         printf("Nodes: " BLUE("%'zu") " Edges: " RED("%'zu\n"), graph.getVertexCount(), graph.edgeList.size());
         auto sourceNode = 0;
 
-        auto bfsCheck = readAnswer((file+".ans").c_str());
-        benchMarkBfs(graph, sourceNode, bfsCheck);
-        bfsCheck.clear();
+        {
+            auto check = readAnswer((file+".ans").c_str());
+            benchMarkBfs(graph, sourceNode, check);
+        }
 
-        auto dijkstraCheck = readAnswer<float>((file + ".ans.sssp").c_str());
-        benchMarkDijkstra(graph, sourceNode, dijkstraCheck);
+
+        {
+            auto check = readAnswer<float>((file + ".ans.sssp").c_str());
+            benchMarkDijkstra(graph, sourceNode, check);
+        }
+
+        if(graph.getVertexCount() <= 1024) {
+            svp::SerialDijkstraStrategy dijkstraStrategy;
+            std::vector<std::vector<float>> check;
+            for(int32_t node = 0; node < graph.getVertexCount(); ++node) {
+                auto tree = dijkstraStrategy.calculate(graph, node);
+                check.emplace_back(tree.costs);
+            }
+            benchmarkFloydWarshall(graph, check);
+        }
+
         printf("\n");
     }
 
