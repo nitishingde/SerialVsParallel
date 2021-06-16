@@ -33,7 +33,7 @@ def dijkstra(graph: list, wgraph: list, source: int, out_f: str):
     from _testcapi import FLT_MAX
 
     visited = [False] * len(graph)
-    dist = [FLT_MAX for _ in range(len(graph))]
+    dist = [float('inf') for _ in range(len(graph))]
     prev = [None] * len(graph)
     dist[source] = 0
     priority_queue = [(0, source)]

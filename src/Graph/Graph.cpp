@@ -244,7 +244,7 @@ svp::WeightedTree<float> svp::SerialDijkstraStrategy::calculate(const svp::CsrGr
     auto &edgeList = graph.edgeList;
     auto &weightList = graph.weightList;
 
-    WeightedTree<float> lineageTree(sourceNode, graph.getVertexCount(), FLT_MAX);
+    WeightedTree<float> lineageTree(sourceNode, graph.getVertexCount(), std::numeric_limits<float>::infinity());
     using Edge = std::pair<float, int32_t>;
     std::priority_queue<Edge, std::vector<Edge>, std::greater<>> priorityQueue;
     priorityQueue.emplace(Edge(0.f, sourceNode));
@@ -300,7 +300,7 @@ svp::WeightedTree<float> svp::OpenCL_DijkstraStrategy::calculate(const svp::CsrG
     SVP_PROFILE_SCOPE(toString().c_str());
 
     cl_int status = CL_SUCCESS;
-    WeightedTree<float> lineageTree(sourceNode, graph.getVertexCount(), FLT_MAX);
+    WeightedTree<float> lineageTree(sourceNode, graph.getVertexCount(), std::numeric_limits<float>::infinity());
 
     auto &edgeList = graph.edgeList;
     cl::Buffer edgeListBuffer(
@@ -353,7 +353,7 @@ svp::WeightedTree<float> svp::OpenCL_DijkstraStrategy::calculate(const svp::CsrG
     );
     verifyOpenCL_Status(status);
 
-    std::vector<float> updatedCosts(graph.getVertexCount(), FLT_MAX);
+    std::vector<float> updatedCosts(graph.getVertexCount(), std::numeric_limits<float>::infinity());
     updatedCosts[sourceNode] = 0;
     cl::Buffer updatedCostsBuffer(
         mContext,

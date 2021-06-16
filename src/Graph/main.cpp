@@ -49,10 +49,10 @@ svp::CsrGraph getCsrGraph(const char *pFileName) {
 
         if(!isWeighted) continue;
 
-        float weight;
+        std::string weight;
         for(int32_t i = 0; i < edgeCount; ++i) {
             input >> weight;
-            weightList.emplace_back(weight);
+            weightList.emplace_back(std::stof(weight));
         }
     }
 
@@ -67,7 +67,13 @@ std::vector<T> readAnswer(const char *pFileName) {
     std::ifstream input(pFileName);
     std::vector<T> distances;
     for(T distance;!input.eof();) {
-        input >> distance;
+        if(std::is_same_v<T, float>) {
+            std::string no;
+            input >> no;
+            distance = std::stof(no);
+        } else {
+            input >> distance;
+        }
         distances.emplace_back(distance);
     }
 
