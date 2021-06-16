@@ -11,9 +11,10 @@ bool svp::verifyLineage(const CsrGraph &graph, const std::vector<int32_t> &paren
     const auto &csr = graph.compressedSparseRows;
 
     for(int32_t node = 0, isRelated = false; node < parents.size(); ++node) {
-        if(node == rootNode or parents[node] == -1) continue;
-        for(uint32_t i = csr[node]; i < csr[node+1]; ++i) {
-            if(edgeList[i] == parents[node]) {
+        auto parent = parents[node];
+        if(node == rootNode or parent == -1) continue;
+        for(uint32_t i = csr[parent]; i < csr[parent+1]; ++i) {
+            if(node == edgeList[i]) {
                 isRelated = true;
                 break;
             }
