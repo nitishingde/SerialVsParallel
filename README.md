@@ -73,8 +73,8 @@ Pi calculation|[Yes](docs/Pi.md#serial-implementation)|[Yes](docs/Pi.md#openmp-i
 Prime: Get the largest prime number and count(prime) below a given upper limit.|Yes|Yes|Yes|Yes|-
 Matrix Multiplication|[Yes](docs/MatrixMultiplication.md#serial-implementation)|[Yes](docs/MatrixMultiplication.md#openmp-implementation)|-|-|[Yes](docs/MatrixMultiplication.md#opencl-implementation)
 Image processing: Nearest neighbour interpolation image scaling (nni)|[Yes](docs/ImageProcessing.md#serial-implementation)|[Yes](docs/ImageProcessing.md#openmp-implementation)|-|-|[Yes](docs/ImageProcessing.md#opencl-implementation)
-Graph: Breadth first search (bfs)|Yes|Yes|-|-|Yes
-Graph: Single source shortest path (sssp)|Yes|-|-|-|Yes
+Graph: Breadth first search (bfs)|[Yes](docs/Graph.md#serial-implementation)|[Yes](docs/Graph.md#openmp-implementation)|-|-|[Yes](docs/Graph.md#opencl-implementation)
+Graph: Single source shortest path (sssp)|[Yes](docs/Graph.md#serial-implementation-1)|-|-|-|[Yes](docs/Graph.md#opencl-implementation-1)
 
 ## How to build and run the projects?
 
